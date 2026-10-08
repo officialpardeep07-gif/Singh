@@ -6,6 +6,7 @@
 <title>PDF Editor</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{--ink:#14213d;--acc:#fca311;--bg:#d5d9e0}
 *{box-sizing:border-box}
@@ -96,6 +97,7 @@ button.go{background:var(--acc);color:var(--ink);border-color:var(--acc);font-we
   <button id="zo">&minus;</button><button id="zl" title="Reset zoom">100%</button><button id="zi">+</button>
   <span class="sep"></span>
   <select id="dq" title="Preview sharpness"><option value="300">Preview 300 DPI</option><option value="600">Preview 600 DPI</option><option value="800">Preview 800 DPI</option></select>
+  <button id="dz" title="ZIP with edited PDF + 300 DPI page images, ready for CorelDRAW">Download CDR ZIP</button>
   <button id="dl" class="go">Download PDF</button>
 </div>
 <div id="cb"><small id="ci">Row ya column select karo, handles se size set karo</small>
@@ -632,9 +634,9 @@ async function cutPdf(out,old,p){
   out.removePage(out.getPageCount()-2);
   return np;
 }
-$('dl').onclick=async()=>{
+async function runExport(b,label,mode){
   const ps=allPages();if(!ps.length)return alert('Open a PDF first.');
-  const b=$('dl');b.textContent='Preparing...';b.disabled=true;
+  b.textContent='Preparing...';b.disabled=true;
   await new Promise(r=>setTimeout(r,30));
   try{
     const{PDFDocument,StandardFonts,rgb}=PDFLib;
@@ -692,11 +694,27 @@ $('dl').onclick=async()=>{
       }
     }
     const bytes=await out.save();
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));a.download='edited.pdf';
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    if(mode==='zip')await saveZip(bytes);else saveBlob(new Blob([bytes],{type:'application/pdf'}),'edited.pdf');
   }catch(err){alert('Download failed: '+err.message)}
-  b.textContent='Download PDF';b.disabled=false;
-};
+  b.textContent=label;b.disabled=false;
+}
+$('dl').onclick=()=>runExport($('dl'),'Download PDF','pdf');
+$('dz').onclick=()=>runExport($('dz'),'Download CDR ZIP','zip');
+function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),8000)}
+async function saveZip(bytes){
+  if(!window.JSZip)throw new Error('ZIP library load nahi hui, internet check karo');
+  const z=new JSZip(),imgs=z.folder('pages');z.file('edited.pdf',bytes);
+  const doc=await pdfjsLib.getDocument({data:bytes.slice()}).promise;
+  for(let i=1;i<=doc.numPages;i++){
+    const pg=await doc.getPage(i),vp=pg.getViewport({scale:300/72}),c=document.createElement('canvas');
+    c.width=Math.floor(vp.width);c.height=Math.floor(vp.height);
+    await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    imgs.file('page-'+String(i).padStart(3,'0')+'.png',await new Promise(r=>c.toBlob(r,'image/png')));
+    c.width=c.height=0;
+  }
+  z.file('README.txt','CorelDRAW me kholne ke liye:\n1. CorelDRAW > File > Open > edited.pdf (text/vector editable rehta hai)\n2. File > Save As > .cdr\n\npages/ folder me har page ki 300 DPI PNG image hai (trace/reference ke liye).\n');
+  saveBlob(await z.generateAsync({type:'blob',compression:'DEFLATE'}),'edited-for-CorelDRAW.zip');
+}
 </script>
 </body>
 </html>
