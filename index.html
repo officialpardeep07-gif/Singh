@@ -24,7 +24,8 @@ button.go{background:var(--acc);color:var(--ink);border-color:var(--acc);font-we
 #bar small{opacity:.75}
 #tabs{display:none;gap:4px;flex-wrap:wrap;background:#0d1730;padding:5px 8px;align-items:center}
 #tabs button{padding:5px 9px}#tabs button.x{padding:5px 7px;opacity:.8}
-#stage{flex:1;overflow:auto;padding:12px}
+html,body{overscroll-behavior:none}
+#stage{flex:1;overflow:auto;padding:12px;overscroll-behavior:contain}
 .empty{max-width:420px;margin:12vh auto;text-align:center;color:#3b4252;font-size:16px}
 .page{position:relative;margin:0 auto 14px;background:#fff;box-shadow:0 2px 12px #0003}
 .page canvas{width:100%;height:100%;display:block}
@@ -128,6 +129,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 const $=id=>document.getElementById(id);
 const S={tool:'select',sel:null,bytes:null};
 const U=[];let Z=1,PID=0;
+const IR={};let IK=0;const regImg=u=>(IR[++IK]=u,IK);
 const hx=c=>{const m=c.match(/\d+/g);if(!m||c.indexOf('rgba(0, 0, 0, 0)')>-1)return'#000000';return'#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('')};
 const fitW=()=>Math.min($('stage').clientWidth-24,900);
 const allPages=()=>[...document.querySelectorAll('.page')];
@@ -214,7 +216,7 @@ function addEl(L,type,x,y,o={}){
     if(type==='box')e.style.background='#ffffff';
     if(type==='img'){
       e.innerHTML='<img class="ghost" draggable="false"><div class="win"><img draggable="false"></div>';
-      e.querySelectorAll('img').forEach(m=>m.src=o.src);
+      e.dataset.k=regImg(o.src);e.querySelectorAll('img').forEach(m=>m.src=o.src);
       e._i={iw:o.w,ih:o.h,ox:0,oy:0};applyImg(e);
       e.insertAdjacentHTML('beforeend',['tl','tr','bl','br','l','r','t','b'].map(k=>'<i class="ch" data-s="'+k+'"></i>').join(''));
     }
@@ -341,6 +343,7 @@ function pasteClip(){
   el.scrollIntoView({block:'nearest',inline:'nearest'});
 }
 $('pa').onclick=pasteClip;
+addEventListener('beforeunload',e=>{if(docs.length){e.preventDefault();e.returnValue=''}});
 async function openPdf(file,asRef){
   if(!file||LOADING)return;
   if(asRef&&!docs.length)return alert('Pehle Main PDF kholo (Open PDF), phir "+ Another PDF" se doosri kholo');
@@ -584,11 +587,11 @@ async function takeArea(move){
   const bw0=+d.dataset.bw,bw=a.x1-a.x0,bh=a.y1-a.y0;let url=null;
   if(d._pg&&!d._cuts.length){ // fresh render of just this area at ~600 DPI: sharp, not a zoomed-in preview
     try{
-      const pb=d._pg.getViewport({scale:1}).width/bw0,sc=Math.min(600/72,6500/(bw*pb),6500/(bh*pb)),px=sc*pb;
+      const pb=d._pg.getViewport({scale:1}).width/bw0,sc=Math.min(600/72,Math.sqrt((MOBILE?16e6:50e6)/((bw*pb)*(bh*pb))),6500/(bw*pb),6500/(bh*pb)),px=sc*pb;
       const t=document.createElement('canvas');t.width=Math.max(1,Math.round(bw*px));t.height=Math.max(1,Math.round(bh*px));
       const x=t.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,t.width,t.height);
       await d._pg.render({canvasContext:x,viewport:d._pg.getViewport({scale:sc,offsetX:-a.x0*px,offsetY:-a.y0*px})}).promise;
-      url=t.toDataURL('image/png');
+      url=t.toDataURL('image/png');t.width=t.height=0;
     }catch(err){console.warn('hi-res area failed',err)}
   }
   if(!url){
@@ -609,14 +612,14 @@ $('zo').onclick=()=>setZoom(Z/1.25);$('zi').onclick=()=>setZoom(Z*1.25);$('zl').
 $('stage').addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZoom(Z*(e.deltaY<0?1.1:1/1.1))}},{passive:false});
 
 /* ===== undo ===== */
-function snapState(){return allPages().map(d=>{const L=d.querySelector('.layer');L.querySelectorAll('.el.img').forEach(e=>{if(e._i)e.dataset.i=JSON.stringify(e._i)});return{d,h:L.innerHTML,c:JSON.stringify(d._cuts)}})}
+function snapState(){return allPages().map(d=>{const L=d.querySelector('.layer');L.querySelectorAll('.el.img').forEach(e=>{if(e._i)e.dataset.i=JSON.stringify(e._i)});const cl=L.cloneNode(true);cl.querySelectorAll('.el.img img').forEach(m=>m.removeAttribute('src'));return{d,h:cl.innerHTML,c:JSON.stringify(d._cuts)}})}
 const keyOf=s=>s.map(r=>r.d.dataset.id+'|'+r.h.replace(/ (sel|crop)(?=[" ])/g,'')+'|'+r.c).join('§');
 function snap(){const s=snapState(),k=keyOf(s),t=U[U.length-1];if(t&&t.k===k)return;s.k=k;U.push(s);if(U.length>25)U.shift();upd()}
 function upd(){$('un').disabled=!U.length}
 function restore(s){
   cancelCut();select(null);$('pages').replaceChildren(...s.map(r=>r.d));
   s.forEach(r=>{const d=r.d,L=d.querySelector('.layer');L.innerHTML=r.h;
-    L.querySelectorAll('.el').forEach(e=>{e.classList.remove('sel','crop');bindEl(e);if(e.dataset.i)e._i=JSON.parse(e.dataset.i)});
+    L.querySelectorAll('.el').forEach(e=>{e.classList.remove('sel','crop');bindEl(e);if(e.dataset.i)e._i=JSON.parse(e.dataset.i);if(e.dataset.k)e.querySelectorAll('img').forEach(m=>m.src=IR[e.dataset.k])});
     if(JSON.stringify(d._cuts)!==r.c){d._cuts=JSON.parse(r.c);if(d._on){unpaint(d);paint(d)}}});
   sync();
 }
