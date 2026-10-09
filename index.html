@@ -363,7 +363,7 @@ $('pa').onclick=pasteClip;
 addEventListener('beforeunload',e=>{if(docs.length){e.preventDefault();e.returnValue=''}});
 async function openPdf(file,asRef){
   if(!file||LOADING)return;
-  if(asRef&&!docs.length)return alert('Pehle Main PDF kholo (Open PDF), phir "+ Another PDF" se doosri kholo');
+  if(asRef&&!docs.length)return alert('Pehle Main PDF kholo (Open PDF) ya New sheet banao, phir "+ Another PDF" se doosri kholo');
   if(!asRef&&docs.length&&!confirm('Main PDF badal rahe ho? Main ke edits chale jayenge.'))return;
   LOADING=true;
   try{
@@ -668,6 +668,7 @@ $('m-no').onclick=()=>setTool('select');
 function addBlankSized(pw,ph,after,n){
   n=n||1;
   if(AD!==null&&AD!==0&&docs.length){switchDoc(0);after=null}
+  if(!docs.length){docs.push({name:'New sheet',nodes:[],U:[],scroll:0,bytes:null});AD=0;S.bytes=null;renderTabs()}
   snap();
   const s=Math.min(fitW()/pw,3,2500/ph),e0=document.querySelector('.empty');if(e0)e0.remove();
   const q=n>1?.25:2;let prev=after&&after.isConnected?after:null,first=null;
