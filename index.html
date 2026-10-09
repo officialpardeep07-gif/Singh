@@ -44,10 +44,10 @@ html,body{overscroll-behavior:none}
 .cs i[data-s=t]{top:calc(var(--hs)/-2 - 2px);left:calc(50% - var(--hs)/2);cursor:ns-resize}.cs i[data-s=b]{bottom:calc(var(--hs)/-2 - 2px);left:calc(50% - var(--hs)/2);cursor:ns-resize}
 .rb{position:absolute;background:#ff000022;border:1px dashed #d00;pointer-events:none}
 .tx.ed{background:#fff;color:#000}
-.tool-text .tx,.tool-box .tx,.tool-cut .tx,.tool-line .tx,.tool-area .tx{pointer-events:none}
-.tool-text .layer,.tool-box .layer,.tool-cut .layer,.tool-line .layer,.tool-area .layer{cursor:crosshair}
-.tool-line .el,.tool-area .el,.tool-cut .el{pointer-events:none}
-.tool-line .layer,.tool-area .layer,.tool-cut .layer{touch-action:none}
+.tool-text .tx,.tool-box .tx,.tool-cut .tx,.tool-line .tx,.tool-area .tx,.tool-meas .tx{pointer-events:none}
+.tool-text .layer,.tool-box .layer,.tool-cut .layer,.tool-line .layer,.tool-area .layer,.tool-meas .layer{cursor:crosshair}
+.tool-line .el,.tool-area .el,.tool-cut .el,.tool-meas .el{pointer-events:none}
+.tool-line .layer,.tool-area .layer,.tool-cut .layer,.tool-meas .layer{touch-action:none}
 .el.line::after{content:"";position:absolute;inset:-7px}
 .el{position:absolute}
 .el.box:not(.line):not(.frame){z-index:1}
@@ -60,7 +60,7 @@ html,body{overscroll-behavior:none}
 .el.frame .fe,.el.frame .rz{pointer-events:auto}
 .fe{position:absolute;cursor:move}
 .fe.t{left:0;right:0;top:-6px;height:12px}.fe.b{left:0;right:0;bottom:-6px;height:12px}.fe.l{top:0;bottom:0;left:-6px;width:12px}.fe.r{top:0;bottom:0;right:-6px;width:12px}
-.tool-frame .tx,.tool-frame .el,.tool-line .el *,.tool-area .el *,.tool-cut .el *,.tool-frame .el *{pointer-events:none}
+.tool-frame .tx,.tool-frame .el,.tool-line .el *,.tool-area .el *,.tool-cut .el *,.tool-meas .el *,.tool-frame .el *{pointer-events:none}
 .tool-frame .layer{cursor:crosshair;touch-action:none}
 .el.sel{outline:2px solid var(--acc)}
 .el.img,.el.box{touch-action:none;cursor:move}
@@ -81,6 +81,13 @@ html,body{overscroll-behavior:none}
 .el.sel .mv,.el.sel .rz{display:block}
 .mv{left:0;top:-24px;width:24px;height:24px;background:var(--acc);color:var(--ink);text-align:center;line-height:24px;cursor:move;border-radius:4px}
 .rz{right:-8px;bottom:-8px;width:16px;height:16px;background:var(--acc);border:2px solid var(--ink);border-radius:50%;cursor:nwse-resize}
+#mb{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:var(--ink);color:#fff;padding:8px 10px;border-radius:10px;box-shadow:0 4px 16px #0006;z-index:20;max-width:96vw}
+#mb input[type=number]{width:78px;padding:6px;border-radius:6px;border:1px solid #ffffff30;background:#fff;color:#000}
+#mb select{font:inherit;padding:6px;border-radius:6px}
+#mb small{opacity:.85}
+.cs.ms{background:#1a73e822;border-color:#1a73e8}
+.cs.ms i{border-color:#1a73e8}
+.cs .ml{position:absolute;left:0;top:0;background:#1a73e8;color:#fff;font:600 12px system-ui,Arial,sans-serif;padding:2px 6px;white-space:nowrap;pointer-events:none;font-style:normal}
 </style>
 </head>
 <body>
@@ -89,7 +96,9 @@ html,body{overscroll-behavior:none}
   <label class="b" title="Open another PDF in a new tab to copy / crop from it">+ Another PDF<input id="pr" type="file" accept="application/pdf" multiple hidden></label>
   <button id="pa" title="Paste the last copied area into the Main PDF">Paste</button>
   <button id="un" disabled>&#8630; Undo</button>
-  <button id="bl">Add blank page</button>
+  <button id="bl" title="Current page ke size ke Qty blank pages add karo">Add blank page</button><small>Qty</small><input id="bq" type="number" min="1" max="200" step="1" value="1" title="Kitne page chahiye">
+  <button id="t-meas" title="Page par drag karke length-width dekho (mm / cm / inch), phir usi size ka naya blank page banao">Measure size</button>
+  <button id="t-new" title="W aur H daalke naya blank page / sheet banao, kitne page ye bhi choose karo">New sheet</button>
   <button id="dp">Delete page</button>
   <span class="sep"></span>
   <button id="t-select" class="on">Select</button>
@@ -122,6 +131,13 @@ html,body{overscroll-behavior:none}
   <button id="c-ok" class="ok">&#10004; OK, delete</button></span>
   <span id="cb-area" style="display:none"><button id="c-copy" class="go">Copy</button><button id="c-move" class="ok">Cut (move)</button></span>
   <button id="c-no">&#10005; Cancel</button></div>
+<div id="mb"><small id="mi"></small>
+  <small>W</small><input id="mw" type="number" min="0.1" step="any"><small>H</small><input id="mh" type="number" min="0.1" step="any">
+  <select id="mu" title="Unit"><option value="mm">mm</option><option value="cm">cm</option><option value="inch">inch</option><option value="pt">pt</option></select>
+  <small>Qty</small><input id="mn" type="number" min="1" max="200" step="1" value="1" title="Kitne page banane hain">
+  <button id="m-full" title="Poore page ka size">Full page</button>
+  <button id="m-new" class="go">+ Create blank page(s)</button>
+  <button id="m-no">&#10005; Close</button></div>
 <div id="stage"><div id="pages"><p class="empty">Open a PDF (or drop it here) to start editing. Tap any text to change or delete it.</p></div></div>
 
 <script>
@@ -135,7 +151,7 @@ const fitW=()=>Math.min($('stage').clientWidth-24,900);
 const allPages=()=>[...document.querySelectorAll('.page')];
 function curPage(){const sr=$('stage').getBoundingClientRect(),m=sr.top+sr.height/2,ps=allPages();return ps.find(p=>{const r=p.getBoundingClientRect();return r.top<=m&&r.bottom>=m})||ps[0]}
 
-function setTool(t){S.tool=t;cancelCut();$('stage').className='tool-'+t;['select','text','box','cut','line','area','frame'].forEach(k=>$('t-'+k).classList.toggle('on',k===t))}
+function setTool(t){S.tool=t;cancelCut();cancelMeas();$('stage').className='tool-'+t;['select','text','box','cut','line','area','frame','meas'].forEach(k=>$('t-'+k).classList.toggle('on',k===t))}
 $('t-select').onclick=()=>setTool('select');
 $('t-text').onclick=()=>setTool(S.tool==='text'?'select':'text');
 $('t-box').onclick=()=>setTool(S.tool==='box'?'select':'box');
@@ -199,6 +215,7 @@ function makePage(w,h,pw,ph){
     if(S.tool==='text'){e.preventDefault();snap();const el=addEl(L,'text',x,y);setTool('select');const c=el.querySelector('.ct');c.focus();getSelection().selectAllChildren(c)}
     else if(S.tool==='box'){e.preventDefault();snap();addEl(L,'box',x,y,{w:140,h:30});setTool('select')}
     else if(S.tool==='cut'||S.tool==='area'){e.preventDefault();startCut(d,L,x,y)}
+    else if(S.tool==='meas'){e.preventDefault();startMeas(d,L,x,y)}
     else if(S.tool==='line'){e.preventDefault();startLine(d,L,x,y)}
     else if(S.tool==='frame'){e.preventDefault();startFrame(d,L,x,y)}
     else if(t===L)select(null);
@@ -366,13 +383,9 @@ const st=$('stage');
 st.ondragover=e=>e.preventDefault();
 st.ondrop=async e=>{e.preventDefault();for(const f of [...e.dataTransfer.files])if(f.type==='application/pdf')await openPdf(f,docs.length>0)};
 
-$('bl').onclick=()=>{snap();
-  const ref=curPage(),pw=ref?+ref.dataset.pw:595,ph=ref?+ref.dataset.ph:842,s=fitW()/pw;
-  const e0=document.querySelector('.empty');if(e0)e0.remove();
-  const d=makePage(pw*s,ph*s,pw,ph),c=d.querySelector('canvas');
-  d.dataset.src=-1;c.width=pw*s*2;c.height=ph*s*2;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
-  if(ref)ref.after(d);else $('pages').appendChild(d);
-  d.scrollIntoView({behavior:'smooth'});
+$('bl').onclick=()=>{
+  const ref=curPage(),pw=ref?+ref.dataset.pw:595,ph=ref?+ref.dataset.ph:842;
+  addBlankSized(pw,ph,ref,clamp(parseInt($('bq').value)||1,1,200));
 };
 $('dp').onclick=()=>{const p=curPage();if(p&&confirm('Delete this page?')){snap();select(null);p.remove()}};
 
@@ -606,8 +619,85 @@ async function takeArea(move){
 }
 $('c-copy').onclick=()=>takeArea(false);$('c-move').onclick=()=>takeArea(true);
 
+/* ===== measure size + new blank page of that size ===== */
+const MU={mm:72/25.4,cm:72/2.54,inch:72,pt:1},MD={mm:1,cm:2,inch:2,pt:1};let LU='mm';
+const fmtU=(pt,u)=>+(pt/MU[u]).toFixed(MD[u]);
+$('t-meas').onclick=()=>setTool(S.tool==='meas'?'select':'meas');
+function cancelMeas(){if(S.meas){S.meas.el.remove();S.meas=null}$('mb').style.display='none'}
+function startMeas(d,L,x0,y0){
+  const rb=document.createElement('div');rb.className='rb';L.appendChild(rb);
+  const r0=L.getBoundingClientRect(),bw=+d.dataset.bw,bh=+d.dataset.bh;let X=x0,Y=y0;
+  const mv=m=>{X=clamp((m.clientX-r0.left)/Z,0,bw);Y=clamp((m.clientY-r0.top)/Z,0,bh);
+    Object.assign(rb.style,{left:Math.min(x0,X)+'px',top:Math.min(y0,Y)+'px',width:Math.abs(X-x0)+'px',height:Math.abs(Y-y0)+'px'})};
+  const up=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);rb.remove();
+    let c={x0:Math.min(x0,X),x1:Math.max(x0,X),y0:Math.min(y0,Y),y1:Math.max(y0,Y)};
+    if(c.x1-c.x0<6||c.y1-c.y0<6)c={x0:0,y0:0,x1:bw,y1:bh};
+    showMeas(d,c)};
+  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);
+}
+function showMeas(d,c){
+  cancelMeas();const el=document.createElement('div');el.className='cs ms';
+  el.innerHTML=['tl','tr','bl','br','l','r','t','b'].map(k=>'<i data-s="'+k+'"></i>').join('')+'<b class="ml"></b>';
+  d.firstChild.appendChild(el);S.meas={d,el,...c};drawMeas(true);$('mb').style.display='flex';
+  el.addEventListener('pointerdown',ev=>{
+    ev.preventDefault();ev.stopPropagation();
+    const c=S.meas,sd=ev.target.dataset.s||'',o={...c},sx=ev.clientX,sy=ev.clientY,bw=+c.d.dataset.bw,bh=+c.d.dataset.bh;
+    const mv=m=>{const dx=(m.clientX-sx)/Z,dy=(m.clientY-sy)/Z;
+      if(!sd){const w=o.x1-o.x0,h=o.y1-o.y0;c.x0=clamp(o.x0+dx,0,bw-w);c.y0=clamp(o.y0+dy,0,bh-h);c.x1=c.x0+w;c.y1=c.y0+h}
+      else{if(sd.includes('l'))c.x0=clamp(o.x0+dx,0,o.x1-6);if(sd.includes('r'))c.x1=clamp(o.x1+dx,o.x0+6,bw);if(sd.includes('t'))c.y0=clamp(o.y0+dy,0,o.y1-6);if(sd.includes('b'))c.y1=clamp(o.y1+dy,o.y0+6,bh)}
+      drawMeas(true)};
+    const up=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up)};
+    window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);
+  });
+}
+function drawMeas(fill){
+  const m=S.meas;if(!m)return;
+  Object.assign(m.el.style,{left:m.x0+'px',top:m.y0+'px',width:m.x1-m.x0+'px',height:m.y1-m.y0+'px'});
+  m.el.style.setProperty('--hs',22/Z+'px');
+  const u=$('mu').value,k=+m.d.dataset.pw/+m.d.dataset.bw,wp=(m.x1-m.x0)*k,hp=(m.y1-m.y0)*k;
+  const ml=m.el.querySelector('.ml');ml.style.fontSize=12/Z+'px';ml.style.padding=2/Z+'px '+6/Z+'px';
+  ml.textContent=fmtU(wp,u)+' \u00d7 '+fmtU(hp,u)+' '+u;
+  if(fill){$('mw').value=fmtU(wp,u);$('mh').value=fmtU(hp,u)}
+  $('mi').textContent='Page: '+fmtU(+m.d.dataset.pw,u)+' \u00d7 '+fmtU(+m.d.dataset.ph,u)+' '+u;
+}
+$('mw').oninput=()=>{const m=S.meas,v=parseFloat($('mw').value);if(!m||!(v>0))return;const bw=+m.d.dataset.bw;m.x1=Math.min(bw,Math.max(m.x0+6,m.x0+v*MU[$('mu').value]*bw/+m.d.dataset.pw));drawMeas()};
+$('mh').oninput=()=>{const m=S.meas,v=parseFloat($('mh').value);if(!m||!(v>0))return;const bh=+m.d.dataset.bh;m.y1=Math.min(bh,Math.max(m.y0+6,m.y0+v*MU[$('mu').value]*bh/+m.d.dataset.ph));drawMeas()};
+$('mu').onchange=()=>{const n=$('mu').value;['mw','mh'].forEach(id=>{const v=parseFloat($(id).value);if(v>0)$(id).value=+(v*MU[LU]/MU[n]).toFixed(MD[n])});LU=n;drawMeas()};
+$('m-full').onclick=()=>{const m=S.meas;if(!m)return;m.x0=m.y0=0;m.x1=+m.d.dataset.bw;m.y1=+m.d.dataset.bh;drawMeas(true)};
+$('m-no').onclick=()=>setTool('select');
+function addBlankSized(pw,ph,after,n){
+  n=n||1;
+  if(AD!==null&&AD!==0&&docs.length){switchDoc(0);after=null}
+  snap();
+  const s=Math.min(fitW()/pw,3,2500/ph),e0=document.querySelector('.empty');if(e0)e0.remove();
+  const q=n>1?.25:2;let prev=after&&after.isConnected?after:null,first=null;
+  for(let i=0;i<n;i++){
+    const d=makePage(pw*s,ph*s,pw,ph),c=d.querySelector('canvas');
+    d.dataset.src=-1;c.width=Math.max(1,Math.round(pw*s*q));c.height=Math.max(1,Math.round(ph*s*q));
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+    if(prev)prev.after(d);else $('pages').appendChild(d);
+    prev=d;if(!first)first=d;
+  }
+  setTool('select');first.scrollIntoView({behavior:'smooth'});
+}
+$('t-new').onclick=()=>{
+  setTool('select');
+  const u=$('mu').value;
+  if(!(parseFloat($('mw').value)>0))$('mw').value=fmtU(595.28,u);
+  if(!(parseFloat($('mh').value)>0))$('mh').value=fmtU(841.89,u);
+  $('mi').textContent='Naye page ka W aur H daalo (default A4)';
+  $('mb').style.display='flex';$('mw').focus();$('mw').select();
+};
+$('m-new').onclick=()=>{
+  const m=S.meas,u=$('mu').value,w=parseFloat($('mw').value)*MU[u],h=parseFloat($('mh').value)*MU[u];
+  if(!(w>=1&&h>=1))return alert('Width aur height sahi daalo');
+  if(w>14400||h>14400)return alert('Maximum size 5080 mm (14400 pt) tak hai');
+  const n=clamp(parseInt($('mn').value)||1,1,200);
+  addBlankSized(w,h,m?m.d:curPage(),n);
+};
+
 /* ===== zoom ===== */
-function setZoom(z){Z=clamp(z,.4,4);if(S.cut)drawCut();allPages().forEach(applyZ);$('zl').textContent=Math.round(Z*100)+'%'}
+function setZoom(z){Z=clamp(z,.4,4);if(S.cut)drawCut();if(S.meas)drawMeas();allPages().forEach(applyZ);$('zl').textContent=Math.round(Z*100)+'%'}
 $('zo').onclick=()=>setZoom(Z/1.25);$('zi').onclick=()=>setZoom(Z*1.25);$('zl').onclick=()=>setZoom(1);
 $('stage').addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZoom(Z*(e.deltaY<0?1.1:1/1.1))}},{passive:false});
 
@@ -617,7 +707,7 @@ const keyOf=s=>s.map(r=>r.d.dataset.id+'|'+r.h.replace(/ (sel|crop)(?=[" ])/g,''
 function snap(){const s=snapState(),k=keyOf(s),t=U[U.length-1];if(t&&t.k===k)return;s.k=k;U.push(s);if(U.length>25)U.shift();upd()}
 function upd(){$('un').disabled=!U.length}
 function restore(s){
-  cancelCut();select(null);$('pages').replaceChildren(...s.map(r=>r.d));
+  cancelCut();cancelMeas();select(null);$('pages').replaceChildren(...s.map(r=>r.d));
   s.forEach(r=>{const d=r.d,L=d.querySelector('.layer');L.innerHTML=r.h;
     L.querySelectorAll('.el').forEach(e=>{e.classList.remove('sel','crop');bindEl(e);if(e.dataset.i)e._i=JSON.parse(e.dataset.i);if(e.dataset.k)e.querySelectorAll('img').forEach(m=>m.src=IR[e.dataset.k])});
     if(JSON.stringify(d._cuts)!==r.c){d._cuts=JSON.parse(r.c);if(d._on){unpaint(d);paint(d)}}});
