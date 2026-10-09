@@ -88,6 +88,7 @@ html,body{overscroll-behavior:none}
 .cs.ms{background:#1a73e822;border-color:#1a73e8}
 .cs.ms i{border-color:#1a73e8}
 .cs .ml{position:absolute;left:0;top:0;background:#1a73e8;color:#fff;font:600 12px system-ui,Arial,sans-serif;padding:2px 6px;white-space:nowrap;pointer-events:none;font-style:normal}
+#tt{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 14px;border-radius:8px;box-shadow:0 4px 16px #0006;z-index:30;display:none;max-width:92vw;text-align:center}
 </style>
 </head>
 <body>
@@ -95,6 +96,8 @@ html,body{overscroll-behavior:none}
   <label class="b">Open PDF<input id="pf" type="file" accept="application/pdf" hidden></label>
   <label class="b" title="Open another PDF in a new tab to copy / crop from it">+ Another PDF<input id="pr" type="file" accept="application/pdf" multiple hidden></label>
   <button id="pa" title="Paste the last copied area into the Main PDF">Paste</button>
+  <button id="sv" class="go" title="Is page ka kaam save karo; agla Paste apne aap next page par jayega">Save &amp; next page</button>
+  <label style="display:inline-flex;gap:4px;align-items:center" title="Har Paste ke baad target apne aap next page par chala jaye"><input id="an" type="checkbox"><small style="opacity:1">Auto next</small></label><small id="tp"></small>
   <button id="un" disabled>&#8630; Undo</button>
   <button id="bl" title="Current page ke size ke Qty blank pages add karo">Add blank page</button><small>Qty</small><input id="bq" type="number" min="1" max="200" step="1" value="1" title="Kitne page chahiye">
   <button id="t-meas" title="Page par drag karke length-width dekho (mm / cm / inch), phir usi size ka naya blank page banao">Measure size</button>
@@ -138,6 +141,7 @@ html,body{overscroll-behavior:none}
   <button id="m-full" title="Poore page ka size">Full page</button>
   <button id="m-new" class="go">+ Create blank page(s)</button>
   <button id="m-no">&#10005; Close</button></div>
+<div id="tt"></div>
 <div id="stage"><div id="pages"><p class="empty">Open a PDF (or drop it here) to start editing. Tap any text to change or delete it.</p></div></div>
 
 <script>
@@ -351,13 +355,16 @@ function renderTabs(){
 function pasteClip(){
   if(!S.clip)return alert('Pehle kisi PDF me Copy area karo');
   if(AD!==0)switchDoc(0);
-  const p=curPage();if(!p)return alert('Main PDF me koi page nahi hai');
+  const p=tpPage()||curPage();if(!p)return alert('Main PDF me koi page nahi hai');
   const k=+p.dataset.bw/+p.dataset.pw,m=+p.dataset.bw*.95;let w=S.clip.pw*k,h=S.clip.ph*k;if(w>m){h*=m/w;w=m}
   const sr=$('stage').getBoundingClientRect(),pr=p.getBoundingClientRect(),BW=+p.dataset.bw,BH=+p.dataset.bh;
-  const vt=Math.max(0,(sr.top-pr.top)/Z),vb=Math.min(BH,(sr.bottom-pr.top)/Z);
-  const y=clamp(vt+Math.max(10,(vb-vt-h)/2),0,Math.max(0,BH-h)),x=clamp((BW-w)/2,0,Math.max(0,BW-w));
+  const vis=p===curPage(),vt=Math.max(0,(sr.top-pr.top)/Z),vb=Math.min(BH,(sr.bottom-pr.top)/Z);
+  let y=vis?clamp(vt+Math.max(10,(vb-vt-h)/2),0,Math.max(0,BH-h)):clamp((BH-h)/2,0,Math.max(0,BH-h)),x=clamp((BW-w)/2,0,Math.max(0,BW-w));
+  const L0=p.querySelector('.layer');
+  for(let g=0;g<12&&[...L0.querySelectorAll('.el.img')].some(e=>Math.abs(e.offsetLeft-x)<6&&Math.abs(e.offsetTop-y)<6);g++){x=clamp(x+24,0,Math.max(0,BW-w));y=clamp(y+24,0,Math.max(0,BH-h))}
   snap();const el=addEl(p.querySelector('.layer'),'img',x,y,{src:S.clip.url,w,h});
   el.scrollIntoView({block:'nearest',inline:'nearest'});
+  if($('an').checked)advanceTarget(p,true);
 }
 $('pa').onclick=pasteClip;
 addEventListener('beforeunload',e=>{if(docs.length){e.preventDefault();e.returnValue=''}});
@@ -618,6 +625,32 @@ async function takeArea(move){
   const o=move?0:14;addEl(L,'img',a.x0+o,a.y0+o,{src:url,w:bw,h:bh});
 }
 $('c-copy').onclick=()=>takeArea(false);$('c-move').onclick=()=>takeArea(true);
+
+/* ===== save & next page (paste target) ===== */
+S.tp=null;
+function mainPages(){return docs.length&&AD!==0?(docs[0].nodes||[]).filter(n=>n.classList&&n.classList.contains('page')):allPages()}
+function tpPage(){return S.tp&&allPages().includes(S.tp)?S.tp:null}
+function updTp(){const ps=mainPages(),i=S.tp?ps.indexOf(S.tp):-1;$('tp').textContent=i>=0?'Paste \u2192 Page '+(i+1)+'/'+ps.length:''}
+let TT=0;function toast(t){const e=$('tt');e.textContent=t;e.style.display='block';clearTimeout(TT);TT=setTimeout(()=>e.style.display='none',2800)}
+function advanceTarget(cur,quiet){
+  const ps=allPages(),i=ps.indexOf(cur),nx=i>=0?ps[i+1]:null;
+  if(!nx){S.tp=cur;updTp();toast('Ye last page hai. Aur page chahiye to "Add blank page" karo');return false}
+  S.tp=nx;updTp();
+  toast('Page '+(i+1)+' save \u2714  Agla Paste Page '+(i+2)+' par jayega');
+  if(!quiet)nx.scrollIntoView({behavior:'smooth',block:'start'});
+  return true;
+}
+$('sv').onclick=()=>{
+  if(AD!==null&&AD!==0&&docs.length)switchDoc(0);
+  select(null);if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  if(!allPages().length)return;
+  advanceTarget(tpPage()||curPage(),false);
+};
+document.addEventListener('pointerdown',ev=>{
+  if(!S.tp||!(AD===0||AD===null))return;
+  const d=ev.target.closest&&ev.target.closest('.page');
+  if(d&&d!==S.tp&&allPages().includes(d)){S.tp=d;updTp()}
+},true);
 
 /* ===== measure size + new blank page of that size ===== */
 const MU={mm:72/25.4,cm:72/2.54,inch:72,pt:1},MD={mm:1,cm:2,inch:2,pt:1};let LU='mm';
