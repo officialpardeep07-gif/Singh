@@ -51,10 +51,10 @@ html,body{overscroll-behavior:none}
 .cs i[data-s=t]{top:calc(var(--hs)/-2 - 2px);left:calc(50% - var(--hs)/2);cursor:ns-resize}.cs i[data-s=b]{bottom:calc(var(--hs)/-2 - 2px);left:calc(50% - var(--hs)/2);cursor:ns-resize}
 .rb{position:absolute;background:#ff000022;border:1px dashed #d00;pointer-events:none}
 .tx.ed{background:#fff;color:#000}
-.tool-text .tx,.tool-box .tx,.tool-cut .tx,.tool-line .tx,.tool-area .tx,.tool-meas .tx,.tool-qedit .tx{pointer-events:none}
-.tool-text .layer,.tool-box .layer,.tool-cut .layer,.tool-line .layer,.tool-area .layer,.tool-meas .layer,.tool-qedit .layer{cursor:crosshair}
-.tool-line .el,.tool-area .el,.tool-cut .el,.tool-meas .el,.tool-qedit .el{pointer-events:none}
-.tool-line .layer,.tool-area .layer,.tool-cut .layer,.tool-meas .layer,.tool-qedit .layer{touch-action:none}
+.tool-text .tx,.tool-box .tx,.tool-cut .tx,.tool-line .tx,.tool-area .tx,.tool-meas .tx,.tool-qedit .tx,.tool-ocra .tx{pointer-events:none}
+.tool-text .layer,.tool-box .layer,.tool-cut .layer,.tool-line .layer,.tool-area .layer,.tool-meas .layer,.tool-qedit .layer,.tool-ocra .layer{cursor:crosshair}
+.tool-line .el,.tool-area .el,.tool-cut .el,.tool-meas .el,.tool-qedit .el,.tool-ocra .el{pointer-events:none}
+.tool-line .layer,.tool-area .layer,.tool-cut .layer,.tool-meas .layer,.tool-qedit .layer,.tool-ocra .layer{touch-action:none}
 .el.line::after{content:"";position:absolute;inset:-7px}
 .el{position:absolute}
 .el.box:not(.line):not(.frame){z-index:1}
@@ -67,7 +67,7 @@ html,body{overscroll-behavior:none}
 .el.frame .fe,.el.frame .rz{pointer-events:auto}
 .fe{position:absolute;cursor:move}
 .fe.t{left:0;right:0;top:-6px;height:12px}.fe.b{left:0;right:0;bottom:-6px;height:12px}.fe.l{top:0;bottom:0;left:-6px;width:12px}.fe.r{top:0;bottom:0;right:-6px;width:12px}
-.tool-frame .tx,.tool-frame .el,.tool-line .el *,.tool-area .el *,.tool-cut .el *,.tool-meas .el *,.tool-qedit .el *,.tool-frame .el *{pointer-events:none}
+.tool-frame .tx,.tool-frame .el,.tool-line .el *,.tool-area .el *,.tool-cut .el *,.tool-meas .el *,.tool-qedit .el *,.tool-ocra .el *,.tool-frame .el *{pointer-events:none}
 .tool-frame .layer{cursor:crosshair;touch-action:none}
 .el.sel{outline:2px solid var(--acc)}
 .el.img,.el.box{touch-action:none;cursor:move}
@@ -170,6 +170,7 @@ body.mgon .mg{display:block}
   <button id="pb">Page border</button>
   <button id="t-area" title="Select written area, then copy / move it anywhere">Copy area</button>
   <button id="t-img">Add photo</button>
+  <button id="t-ocr" title="Jis PDF me text select nahi hota (image / CorelDRAW curves / pehle save kiya hua), usko scan karke text editable banao">Make text editable (OCR)</button><button id="t-ocra" title="Jo text editable banana hai sirf usko drag karke mark karo, sirf wahi scan hoga">OCR: mark area</button><select id="ocl" title="Text ki language"><option value="eng">English</option><option value="hin+eng">Hindi + English</option></select>
   <button id="t-qedit" title="PDF me jo QR pehle se hai: usko select karo, app scan karke uska link dikhayega, phir link badal sako">Edit QR</button>
   <button id="t-qr" title="Koi bhi link / website daalo, uska QR code banao (scan karte hi us link par le jayega)">QR code</button>
   <button id="t-share" title="Phone aur PC ke beech file bhejo / lo (same site kholke code ya QR se connect)">Share files</button>
@@ -252,7 +253,7 @@ const fitW=()=>Math.min($('stage').clientWidth-24,900);
 const allPages=()=>[...document.querySelectorAll('.page')];
 function curPage(){const sr=$('stage').getBoundingClientRect(),m=sr.top+sr.height/2,ps=allPages();return ps.find(p=>{const r=p.getBoundingClientRect();return r.top<=m&&r.bottom>=m})||ps[0]}
 
-function setTool(t){S.tool=t;cancelCut();cancelMeas();cancelQe();$('stage').className='tool-'+t;['select','text','box','cut','line','area','frame','meas','qedit'].forEach(k=>$('t-'+k).classList.toggle('on',k===t))}
+function setTool(t){S.tool=t;cancelCut();cancelMeas();cancelQe();$('stage').className='tool-'+t;['select','text','box','cut','line','area','frame','meas','qedit','ocra'].forEach(k=>$('t-'+k).classList.toggle('on',k===t))}
 $('t-select').onclick=()=>setTool('select');
 $('t-text').onclick=()=>setTool(S.tool==='text'?'select':'text');
 $('t-box').onclick=()=>setTool(S.tool==='box'?'select':'box');
@@ -319,6 +320,7 @@ function makePage(w,h,pw,ph){
     else if(S.tool==='cut'||S.tool==='area'){e.preventDefault();startCut(d,L,x,y)}
     else if(S.tool==='meas'){e.preventDefault();startMeas(d,L,x,y)}
     else if(S.tool==='qedit'){e.preventDefault();startQe(d,L,x,y)}
+    else if(S.tool==='ocra'){e.preventDefault();startOcrA(d,L,x,y)}
     else if(S.tool==='line'){e.preventDefault();startLine(d,L,x,y)}
     else if(S.tool==='frame'){e.preventDefault();startFrame(d,L,x,y)}
     else if(t===L)select(null);
@@ -554,6 +556,92 @@ $('q-dl').onclick=()=>{
   const r=qrMake();if(!r)return;
   fetch(r.url).then(x=>x.blob()).then(b=>saveBlob(b,'qr-code.png'));
 };
+
+/* ===== OCR: image / curves wale text ko bhi editable banao ===== */
+let OW=null,OL='',OBUSY=false;
+function loadTess(){return new Promise((res,rej)=>{if(window.Tesseract)return res();const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=res;s.onerror=()=>rej(new Error('OCR library load nahi hui, internet check karo'));document.head.appendChild(s)})}
+async function getOcr(lang){
+  if(OW&&OL===lang)return OW;
+  if(OW){try{await OW.terminate()}catch(_){}OW=null}
+  OW=await Tesseract.createWorker(lang,1,{logger:m=>{if(m.status==='recognizing text'&&OCRP)OCRP(m.progress)}});OL=lang;return OW;
+}
+let OCRP=null;
+async function ocrPage(d,worker,a){
+  const bw0=+d.dataset.bw,bh0=+d.dataset.bh,cv=d.querySelector('canvas'),L=d.querySelector('.layer');
+  const R=a||{x0:0,y0:0,x1:bw0,y1:bh0},bw=R.x1-R.x0,bh=R.y1-R.y0;
+  let c=null,P=1;
+  if(d._pg&&!d._cuts.length){
+    try{
+      P=Math.min(2200/bw,3200/bh,a?6:99);const pb=d._pg.getViewport({scale:1}).width/bw0,sc=P/pb;
+      c=document.createElement('canvas');c.width=Math.max(1,Math.round(bw*P));c.height=Math.max(1,Math.round(bh*P));
+      const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+      await d._pg.render({canvasContext:x,viewport:d._pg.getViewport({scale:sc,offsetX:-R.x0*P,offsetY:-R.y0*P})}).promise;
+    }catch(err){c=null}
+  }
+  if(!c&&cv&&cv.width){const f=cv.width/bw0,w=Math.max(1,Math.round(bw*f)),h=Math.max(1,Math.round(bh*f));c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(cv,Math.round(R.x0*f),Math.round(R.y0*f),w,h,0,0,w,h);P=f}
+  if(!c)return 0;
+  const res=await worker.recognize(c);c.width=c.height=0;
+  const lines=(res.data&&res.data.lines)||[];
+  const real=[...L.children].filter(e=>e.classList.contains('tx')).map(e=>({l:e.offsetLeft,t:e.offsetTop,r:e.offsetLeft+e.offsetWidth,b:e.offsetTop+e.offsetHeight}));
+  let n=0;
+  for(const ln of lines){
+    const txt=(ln.text||'').replace(/\s+/g,' ').trim();
+    if(!txt||(ln.confidence!==undefined&&ln.confidence<(a?15:35)))continue;
+    if(!/[A-Za-z0-9\u0900-\u097F]/.test(txt))continue;
+    const b=ln.bbox,x0=R.x0+b.x0/P,x1=R.x0+b.x1/P,y0=R.y0+b.y0/P,y1=R.y0+b.y1/P,h=y1-y0,w=x1-x0;
+    if(h<4||w<4)continue;
+    const cx=(x0+x1)/2,cy=(y0+y1)/2;
+    if(real.some(r=>cx>=r.l&&cx<=r.r&&cy>=r.t&&cy<=r.b))continue; // jo text pehle se editable hai, dobara mat banao
+    const fs=Math.max(6,h*1.0);
+    const e=document.createElement('div');e.className='tx';e.contentEditable=true;e.spellcheck=false;e.textContent=txt;e.dataset.ocr='1';
+    Object.assign(e.style,{left:x0+'px',top:(y0-fs*.1)+'px',fontSize:fs+'px',minWidth:w+'px',height:fs*1.2+'px'});
+    L.appendChild(e);n++;
+  }
+  return n;
+}
+$('t-ocr').onclick=async()=>{
+  if(OBUSY)return;
+  const ps=allPages();if(!ps.length)return alert('Open a PDF first.');
+  let list=[curPage()];
+  if(ps.length>1&&confirm('OK = sab pages ka text scan karo (time lagega)\nCancel = sirf current page'))list=ps;
+  const lang=$('ocl').value,b=$('t-ocr'),lab=b.textContent;
+  OBUSY=true;b.disabled=true;b.textContent='OCR load ho raha hai\u2026';
+  try{
+    await loadTess();
+    const w=await getOcr(lang);
+    snap();let tot=0,i=0;
+    for(const d of list){
+      i++;OCRP=pr=>{b.textContent='OCR page '+i+'/'+list.length+' '+Math.round(pr*100)+'%'};
+      tot+=await ocrPage(d,w);
+    }
+    toast(tot?('Text editable ho gaya ('+tot+' lines). Ab text par click karke edit karo.'):'Naya text nahi mila (ya text pehle se editable hai).');
+  }catch(err){alert('OCR fail: '+(err&&err.message||err))}
+  OCRP=null;OBUSY=false;b.disabled=false;b.textContent=lab;
+};
+
+function startOcrA(d,L,x0,y0){
+  if(OBUSY)return;
+  const rb=document.createElement('div');rb.className='rb';L.appendChild(rb);
+  const r0=L.getBoundingClientRect(),bw=+d.dataset.bw,bh=+d.dataset.bh;let X=x0,Y=y0;
+  const mv=m=>{X=clamp((m.clientX-r0.left)/Z,0,bw);Y=clamp((m.clientY-r0.top)/Z,0,bh);
+    Object.assign(rb.style,{left:Math.min(x0,X)+'px',top:Math.min(y0,Y)+'px',width:Math.abs(X-x0)+'px',height:Math.abs(Y-y0)+'px'})};
+  const up=async()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);
+    const a={x0:Math.min(x0,X),x1:Math.max(x0,X),y0:Math.min(y0,Y),y1:Math.max(y0,Y)};
+    if(a.x1-a.x0<8||a.y1-a.y0<8){rb.remove();toast('Thoda bada box banao, text ke upar drag karo');return}
+    rb.style.background='#1a73e822';rb.style.borderColor='#1a73e8';
+    OBUSY=true;const b=$('t-ocra'),lab=b.textContent;b.disabled=true;b.textContent='OCR load ho raha hai\u2026';
+    try{
+      await loadTess();const w=await getOcr($('ocl').value);
+      OCRP=pr=>{b.textContent='OCR '+Math.round(pr*100)+'%'};
+      snap();const n=await ocrPage(d,w,a);
+      setTool('select');
+      toast(n?('Text editable ho gaya ('+n+' line'+(n>1?'s':'')+'). Ab us par click karke edit karo.'):'Is area me naya text nahi mila. Box thoda bada/saaf karke dobara try karo (ya text pehle se editable hai).');
+    }catch(err){alert('OCR fail: '+(err&&err.message||err))}
+    rb.remove();OCRP=null;OBUSY=false;b.disabled=false;b.textContent=lab;
+  };
+  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);
+}
+$('t-ocra').onclick=()=>{if(!allPages().length)return alert('Open a PDF first.');setTool(S.tool==='ocra'?'select':'ocra');if(S.tool==='ocra')toast('Jo text editable banana hai uske upar drag karke box banao')};
 
 /* ===== Edit QR: PDF ke andar ka QR scan karo, link badlo, naya QR lagao ===== */
 function qrMods(text){qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8'];const q=qrcode(0,'M');q.addData(text);q.make();return q.getModuleCount()}
