@@ -147,6 +147,50 @@ body.mgon .mg{display:block}
 #sh .ac{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 #sh .ac button{padding:5px 8px}
 #sh .auto{display:flex;gap:6px;align-items:center;margin-top:8px}
+/* ===== Photo Studio ===== */
+#tt{z-index:60}
+#ps{position:fixed;inset:0;background:#0b1224;z-index:45;display:none;flex-direction:column;color:var(--ink)}
+#ps .phd{background:var(--ink);color:#fff;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px}
+#ps .prow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#ps .pmain{flex:1;min-height:0;display:flex}
+#ps-view{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:repeating-conic-gradient(#2a3556 0% 25%,#222c49 0% 50%) 50%/20px 20px}
+#ps-wrap{position:relative;line-height:0;box-shadow:0 4px 24px #0008;display:none}
+#ps-cv{display:block;touch-action:none}
+#ps-cv.pan{cursor:grab}
+#ps-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#c9d1e6;font-size:16px;line-height:1.7;padding:20px;pointer-events:none}
+#ps-view.dg{outline:3px dashed var(--acc);outline-offset:-8px}
+#ps-busy{position:absolute;inset:0;background:#0009;color:#fff;display:none;align-items:center;justify-content:center;font-size:18px;z-index:5}
+#ps-side{width:360px;max-width:100%;background:#fff;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
+#ps button,#ps label.b{background:var(--ink);color:#fff;border:0;border-radius:6px;padding:7px 10px;cursor:pointer;font:inherit}
+#ps button:hover{background:#34487c}
+#ps button.go,#ps label.b.go{background:var(--acc);color:var(--ink);font-weight:600}
+#ps button.on{background:var(--acc);color:var(--ink)}
+#ps .phd button{background:#27375e}
+#ps .ptabs{display:flex;gap:4px}
+#ps .ptabs button{flex:1;padding:7px 4px;font-size:13px;background:#e3e7f0;color:var(--ink)}
+#ps .ptabs button.on{background:var(--ink);color:#fff}
+#ps .pp{display:none;flex-direction:column;gap:9px}
+#ps .pp.on{display:flex}
+#ps .pinfo{background:#eef1f6;border-radius:8px;padding:7px 10px;line-height:1.5}
+#ps select,#ps input[type=number]{font:inherit;padding:6px;border-radius:6px;border:1px solid #9aa3b5;background:#fff;color:#000}
+#ps input[type=number]{width:84px}
+#ps small,#ps .note{color:#555}
+#ps .note{margin:0;font-size:12px;line-height:1.5}
+#ps .pck{display:flex;gap:6px;align-items:center}
+#ps .psl{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:center}
+#ps .psl span{cursor:pointer}
+#ps .psl input{grid-column:1/3;width:100%;accent-color:#fca311;margin:2px 0 4px}
+#ps .psl b{font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+#ps h5{margin:6px 0 0;font-size:13px;color:#555;text-transform:uppercase;letter-spacing:.5px}
+#ps .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#ps .pbot{margin-top:auto;position:sticky;bottom:-10px;background:#fff;border-top:1px solid #ccd;padding:8px 0 4px;display:flex;flex-direction:column;gap:8px}
+#ps hr{border:0;border-top:1px solid #dde1ea;width:100%;margin:2px 0}
+#ps-crop{position:absolute;display:none;border:2px solid #fff;box-shadow:0 0 0 9999px #0007;cursor:move;touch-action:none;box-sizing:border-box}
+#ps-crop i{position:absolute;width:24px;height:24px;background:#fff;border:2px solid #fca311;touch-action:none;margin:-12px 0 0 -12px;box-sizing:border-box}
+#ps-crop i[data-s=tl]{left:0;top:0;cursor:nwse-resize}#ps-crop i[data-s=t]{left:50%;top:0;cursor:ns-resize}#ps-crop i[data-s=tr]{left:100%;top:0;cursor:nesw-resize}
+#ps-crop i[data-s=l]{left:0;top:50%;cursor:ew-resize}#ps-crop i[data-s=r]{left:100%;top:50%;cursor:ew-resize}
+#ps-crop i[data-s=bl]{left:0;top:100%;cursor:nesw-resize}#ps-crop i[data-s=b]{left:50%;top:100%;cursor:ns-resize}#ps-crop i[data-s=br]{left:100%;top:100%;cursor:nwse-resize}
+@media(max-width:800px){#ps .pmain{flex-direction:column}#ps-view{flex:none;height:42vh;height:42dvh}#ps-side{width:auto;flex:1}}
 </style>
 </head>
 <body>
@@ -174,6 +218,7 @@ body.mgon .mg{display:block}
   <button id="t-qedit" title="PDF me jo QR pehle se hai: usko select karo, app scan karke uska link dikhayega, phir link badal sako">Edit QR</button>
   <button id="t-qr" title="Koi bhi link / website daalo, uska QR code banao (scan karte hi us link par le jayega)">QR code</button>
   <button id="t-share" title="Phone aur PC ke beech file bhejo / lo (same site kholke code ya QR se connect)">Share files</button>
+  <button id="t-photo" class="go" title="Koi bhi photo kholo: quality / resolution badhao, edit karo, download karo">Photo Studio</button>
   <input id="imf" type="file" accept="image/*" hidden>
   <span class="sep"></span>
   <small>Size</small><input id="fs" type="number" min="4" max="200" disabled>
@@ -217,6 +262,67 @@ body.mgon .mg{display:block}
   <span id="qe-p"><img alt="New QR preview"></span>
   <button id="qe-ok" class="go" title="Purane QR ko naye QR se badal do">&#10004; Replace QR</button>
   <button id="qe-no">&#10005; Close</button></div>
+<div id="ps">
+  <div class="phd"><b>Photo Studio &middot; Quality &middot; Resolution &middot; Edit</b>
+    <span class="prow"><label class="b go">Open photo<input id="ps-f" type="file" accept="image/*" hidden></label><button id="ps-x">&#10005; Close</button></span></div>
+  <div class="pmain">
+    <div id="ps-view">
+      <div id="ps-wrap"><canvas id="ps-cv"></canvas>
+        <div id="ps-crop"><i data-s="tl"></i><i data-s="t"></i><i data-s="tr"></i><i data-s="l"></i><i data-s="r"></i><i data-s="bl"></i><i data-s="b"></i><i data-s="br"></i></div>
+      </div>
+      <div id="ps-empty">Koi bhi photo yaha drop karo<br>ya upar <b>&nbsp;Open photo&nbsp;</b> dabao<br>ya Ctrl+V se paste karo</div>
+      <div id="ps-busy">Processing&hellip; thoda ruko</div>
+    </div>
+    <div id="ps-side">
+      <div class="ptabs"><button data-t="size" class="on">Resolution</button><button data-t="adj">Adjust</button><button data-t="flt">Filters</button><button data-t="geo">Crop / Rotate</button></div>
+
+      <div class="pp on" data-p="size">
+        <div id="ps-sz" class="pinfo">Pehle photo open karo</div>
+        <div class="prow"><small>Quick:</small><button data-k="0.5">&frac12;&times;</button><button data-k="1.5">1.5&times;</button><button data-k="2">2&times;</button><button data-k="3">3&times;</button><button data-k="4">4&times;</button></div>
+        <div class="prow"><small>Long side</small><select id="ps-le"><option value="">custom</option><option>1280</option><option>1920</option><option>2560</option><option>3840</option><option>5000</option><option>7680</option></select><small>px</small></div>
+        <div class="prow"><small>W</small><input id="ps-w" type="number" min="1"><small>H</small><input id="ps-h" type="number" min="1"><label class="pck"><input id="ps-lk" type="checkbox" checked> Lock ratio</label></div>
+        <label class="pck"><input id="ps-pdn" type="checkbox" checked> Pehle noise / JPEG dots kam karo</label>
+        <label class="pck"><input id="ps-psh" type="checkbox" checked> Bada karne ke baad sharp karo</label>
+        <div class="psl"><span>Sharp strength</span><b id="ps-shv">70</b><input id="ps-shs" type="range" min="0" max="150" value="70"></div>
+        <button id="ps-ap" class="go">Apply size / Upscale</button>
+        <p class="note">Tip: Upscale ke baad &ldquo;100%&rdquo; button se zoom karke sharpness check karo. Photo me jo detail original me hai hi nahi, wo nayi nahi ban sakti &mdash; ye method photo ko smooth, saaf aur sharp banata hai.</p>
+      </div>
+
+      <div class="pp" data-p="adj">
+        <div id="ps-sl"></div>
+        <button id="ps-rst">Reset adjustments</button>
+      </div>
+
+      <div class="pp" data-p="flt">
+        <button id="ps-auto" class="go">&#10024; Auto enhance (1 click)</button>
+        <div class="pgrid" id="ps-fl">
+          <button data-f="none" class="on">Original</button><button data-f="crisp">Crisp</button><button data-f="vivid">Vivid</button>
+          <button data-f="warm">Warm</button><button data-f="cool">Cool</button><button data-f="fade">Fade</button>
+          <button data-f="bw">B &amp; W</button><button data-f="sepia">Sepia</button><button data-f="invert">Invert</button>
+        </div>
+        <p class="note">Filter ke upar Adjust tab ke sliders bhi chalte hain.</p>
+      </div>
+
+      <div class="pp" data-p="geo">
+        <div class="prow"><button id="ps-rl">&#10226; 90&deg;</button><button id="ps-rr">&#10227; 90&deg;</button><button id="ps-fh">&#8651; Flip H</button><button id="ps-fv">&#8645; Flip V</button></div>
+        <div class="psl"><span>Straighten (tedhi photo seedhi)</span><b id="ps-anv">0&deg;</b><input id="ps-an" type="range" min="-15" max="15" step="0.1" value="0"></div>
+        <button id="ps-anb">Apply straighten</button>
+        <hr>
+        <div class="prow"><small>Crop ratio</small><select id="ps-ra"><option value="0">Free</option><option value="1">1 : 1</option><option value="1.3333">4 : 3</option><option value="0.75">3 : 4</option><option value="1.5">3 : 2</option><option value="0.6667">2 : 3</option><option value="1.7778">16 : 9</option><option value="0.5625">9 : 16</option><option value="0.7071">A4 (portrait)</option><option value="0.7778">Passport 35&times;45</option></select></div>
+        <div class="prow"><button id="ps-cs">Crop shuru</button><button id="ps-cok" class="go" disabled>&#10004; Apply crop</button><button id="ps-cno" disabled>&#10005;</button></div>
+        <small id="ps-ci"></small>
+      </div>
+
+      <div class="pbot">
+        <div class="prow"><button id="ps-cmp" title="Dabake rakho &mdash; original dikhega">Hold: Original</button><button id="ps-zm" title="Actual pixels me dekho, drag karke hilao">&#128269; 100%</button><button id="ps-un" disabled>&#8630; Undo</button></div>
+        <div class="prow"><small>Format</small><select id="ps-fmt"><option value="jpg">JPG</option><option value="png">PNG</option><option value="webp">WEBP</option></select><small>Quality</small><b id="ps-qv">92</b></div>
+        <input id="ps-q" type="range" min="40" max="100" value="92" style="width:100%;accent-color:#fca311">
+        <div class="prow"><small>Max file size KB (optional)</small><input id="ps-kb" type="number" min="10" placeholder="e.g. 200"></div>
+        <button id="ps-dl" class="go">&#11015; Download photo</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="tt"></div>
 <div id="sh"><div class="box">
   <div class="hd"><b>Share files &middot; Phone &#8644; PC</b><button id="sh-x">&#10005; Close</button></div>
@@ -1477,6 +1583,455 @@ $('sh-f').onchange=e=>{shSend(e.target.files);e.target.value=''};
 /* QR link se khola gaya ho (#share=CODE) to apne aap join karo */
 {const m=location.hash.match(/share=([A-Za-z0-9]{6})/);
  if(m){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}shOpen(true);$('sh-code').value=m[1].toUpperCase();setTimeout(()=>shJoin(m[1]),300)}}
+/* ===== Photo Studio: koi bhi photo ki quality / resolution badhao, edit karo, download karo ===== */
+(()=>{
+const PSD={br:0,co:0,mt:0,sa:0,wa:0,hu:0,sh:0,dn:0,bl:0,vg:0,lo:0,hi:255,fl:'none'};
+const PS={base:null,hist:[],pv:null,fit:null,fitB:null,P:{...PSD},name:'photo',sk:'',sc:null,raf:0,show0:false,zoom:false,ox:0,oy:0,u:1,vid:0,crop:false,cr:null,ratio:0,disp:1,open:false};
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const MAXMP=IOS?16:100;
+const cl=(v,a,b)=>v<a?a:v>b?b:v;
+const mkc=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+const nap=ms=>new Promise(r=>setTimeout(r,ms||30));
+const busy=on=>{$('ps-busy').style.display=on?'flex':'none'};
+
+/* ---------- resize (high quality, step by step) ---------- */
+function rs(src,w,h){
+  w=Math.max(1,Math.round(w));h=Math.max(1,Math.round(h));
+  let cur=src,cw=src.width,ch=src.height;
+  while(cw!==w||ch!==h){
+    const nw=w>cw?Math.min(w,cw*2):Math.max(w,Math.ceil(cw/2));
+    const nh=h>ch?Math.min(h,ch*2):Math.max(h,Math.ceil(ch/2));
+    const c=mkc(nw,nh),x=c.getContext('2d');
+    x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(cur,0,0,nw,nh);
+    cur=c;cw=nw;ch=nh;
+  }
+  if(cur===src){const c=mkc(w,h);c.getContext('2d').drawImage(src,0,0);return c}
+  return cur;
+}
+
+/* ---------- blur / sharpen / denoise ---------- */
+function boxH(s,d,w,h,r){
+  const div=2*r+1;
+  for(let y=0;y<h;y++){
+    const row=y*w*4;let a0=0,g0=0,b0=0;
+    for(let i=-r;i<=r;i++){const o=row+Math.min(w-1,Math.max(0,i))*4;a0+=s[o];g0+=s[o+1];b0+=s[o+2]}
+    for(let x=0;x<w;x++){
+      const o=row+x*4;d[o]=a0/div;d[o+1]=g0/div;d[o+2]=b0/div;d[o+3]=s[o+3];
+      const p=row+Math.min(w-1,x+r+1)*4,q=row+Math.max(0,x-r)*4;
+      a0+=s[p]-s[q];g0+=s[p+1]-s[q+1];b0+=s[p+2]-s[q+2];
+    }
+  }
+}
+function boxV(s,d,w,h,r){
+  const div=2*r+1,st=w*4;
+  for(let x=0;x<w;x++){
+    const col=x*4;let a0=0,g0=0,b0=0;
+    for(let i=-r;i<=r;i++){const o=Math.min(h-1,Math.max(0,i))*st+col;a0+=s[o];g0+=s[o+1];b0+=s[o+2]}
+    for(let y=0;y<h;y++){
+      const o=y*st+col;d[o]=a0/div;d[o+1]=g0/div;d[o+2]=b0/div;d[o+3]=s[o+3];
+      const p=Math.min(h-1,y+r+1)*st+col,q=Math.max(0,y-r)*st+col;
+      a0+=s[p]-s[q];g0+=s[p+1]-s[q+1];b0+=s[p+2]-s[q+2];
+    }
+  }
+}
+function gblur(src,w,h,sigma){
+  const r=Math.max(1,Math.round(sigma*0.85));
+  const a=new Uint8ClampedArray(src),b=new Uint8ClampedArray(src.length);
+  for(let i=0;i<3;i++){boxH(a,b,w,h,r);boxV(b,a,w,h,r)}
+  return a;
+}
+function unsharp(d,w,h,sigma,amt){
+  const bl=gblur(d,w,h,sigma);
+  for(let i=0;i<d.length;i+=4){
+    d[i]+=(d[i]-bl[i])*amt;d[i+1]+=(d[i+1]-bl[i+1])*amt;d[i+2]+=(d[i+2]-bl[i+2])*amt;
+  }
+}
+function denoise(d,w,h,sigma,str){
+  const bl=gblur(d,w,h,sigma),T=6+str*0.6,k=Math.min(1,.35+str/100*.65);
+  for(let i=0;i<d.length;i+=4){
+    const df=Math.max(Math.abs(d[i]-bl[i]),Math.abs(d[i+1]-bl[i+1]),Math.abs(d[i+2]-bl[i+2]));
+    const wt=Math.max(0,1-df/T)*k;
+    if(wt>0){d[i]+=(bl[i]-d[i])*wt;d[i+1]+=(bl[i+1]-d[i+1])*wt;d[i+2]+=(bl[i+2]-d[i+2])*wt}
+  }
+}
+function spatial(img,e,u){
+  const w=img.width,h=img.height,d=img.data;
+  if(e.dn>0)denoise(d,w,h,Math.max(0.8,1.4*u),e.dn);
+  if(e.bl>0)d.set(gblur(d,w,h,Math.max(0.8,e.bl*u)));
+  if(e.sh>0)unsharp(d,w,h,Math.max(0.7,u),e.sh/100);
+}
+
+/* ---------- colour ---------- */
+const PRE={none:{},bw:{sa:-100,co:8},sepia:{sep:1},vivid:{sa:35,co:12},cool:{wa:-40},warm:{wa:40},fade:{co:-18,br:10,sa:-25},crisp:{sh:60,co:8},invert:{inv:1}};
+function eff(P){
+  const d=PRE[P.fl]||{},e={...P};
+  for(const k of ['br','co','sa','wa'])e[k]=cl(P[k]+(d[k]||0),-100,100);
+  e.sh=cl(P.sh+(d.sh||0),0,200);e.sep=d.sep||0;e.inv=d.inv||0;
+  return e;
+}
+const isDef=P=>Object.keys(PSD).every(k=>P[k]===PSD[k]);
+const mm=(A,B)=>{const R=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++)R[i*3+j]=A[i*3]*B[j]+A[i*3+1]*B[3+j]+A[i*3+2]*B[6+j];return R};
+function colorMat(e){
+  const s=1+e.sa/100,lr=.299,lg=.587,lb=.114;
+  let M=[lr+(1-lr)*s,lg*(1-s),lb*(1-s),lr*(1-s),lg+(1-lg)*s,lb*(1-s),lr*(1-s),lg*(1-s),lb+(1-lb)*s];
+  if(e.hu){
+    const a=e.hu*Math.PI/180,c=Math.cos(a),n=Math.sin(a);
+    M=mm([.213+c*.787-n*.213,.715-c*.715-n*.715,.072-c*.072+n*.928,
+          .213-c*.213+n*.143,.715+c*.285+n*.140,.072-c*.072-n*.283,
+          .213-c*.213-n*.787,.715-c*.715+n*.715,.072+c*.928+n*.072],M);
+  }
+  if(e.sep)M=mm([.393,.769,.189,.349,.686,.168,.272,.534,.131],M);
+  return M;
+}
+function color(img,e){
+  const d=img.data,w=img.width,h=img.height;
+  const lo=e.lo,hi=Math.max(lo+8,e.hi),ex=Math.pow(2,-e.mt/100),C=e.co*2.55,f=(259*(C+255))/(255*(259-C)),B=e.br*2.55;
+  const lut=new Uint8ClampedArray(256);
+  for(let i=0;i<256;i++){let v=cl((i-lo)/(hi-lo),0,1);v=Math.pow(v,ex)*255;v=f*(v-128)+128+B;if(e.inv)v=255-v;lut[i]=v}
+  const M=colorMat(e),dr=e.wa*.35,dg=e.wa*.05,db=-e.wa*.35;
+  const ident=Math.abs(M[0]-1)+Math.abs(M[4]-1)+Math.abs(M[8]-1)+Math.abs(M[1])+Math.abs(M[2])+Math.abs(M[3])+Math.abs(M[5])+Math.abs(M[6])+Math.abs(M[7])<1e-6&&!e.wa;
+  if(ident){for(let i=0;i<d.length;i+=4){d[i]=lut[d[i]];d[i+1]=lut[d[i+1]];d[i+2]=lut[d[i+2]]}}
+  else{
+    for(let i=0;i<d.length;i+=4){
+      const r=lut[d[i]],g=lut[d[i+1]],b=lut[d[i+2]];
+      d[i]=M[0]*r+M[1]*g+M[2]*b+dr;d[i+1]=M[3]*r+M[4]*g+M[5]*b+dg;d[i+2]=M[6]*r+M[7]*g+M[8]*b+db;
+    }
+  }
+  if(e.vg>0){
+    const a=e.vg/100,cx=w/2,cy=h/2;
+    for(let y=0;y<h;y++){
+      const dy=(y-cy)/cy,row=y*w*4;
+      for(let x=0;x<w;x++){
+        const dx=(x-cx)/cx,dd=Math.sqrt((dx*dx+dy*dy)/2),k=1-a*Math.pow(dd,2.2)*1.1,o=row+x*4;
+        d[o]*=k;d[o+1]*=k;d[o+2]*=k;
+      }
+    }
+  }
+}
+function full(b,P){
+  const e=eff(P),img=b.getContext('2d',{willReadFrequently:true}).getImageData(0,0,b.width,b.height);
+  spatial(img,e,Math.max(b.width,b.height)/1400);color(img,e);
+  const o=mkc(b.width,b.height);o.getContext('2d').putImageData(img,0,0);return o;
+}
+
+/* ---------- preview ---------- */
+function draw(){
+  if(!PS.base||!PS.pv)return;
+  const cv=$('ps-cv'),pv=PS.pv,w=pv.width,h=pv.height;
+  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
+  const x=cv.getContext('2d');
+  if(PS.show0||isDef(PS.P)){x.drawImage(pv,0,0);return}
+  const e=eff(PS.P),key=[e.dn,e.bl,e.sh,w,h,PS.vid].join('|');
+  if(PS.sk!==key){
+    const img=pv.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h);
+    spatial(img,e,PS.u);PS.sc=img;PS.sk=key;
+  }
+  const img=new ImageData(new Uint8ClampedArray(PS.sc.data),w,h);
+  color(img,e);x.putImageData(img,0,0);
+}
+const sched=()=>{cancelAnimationFrame(PS.raf);PS.raf=requestAnimationFrame(draw)};
+function view(){
+  const b=PS.base;if(!b)return;
+  const vw=$('ps-view'),avW=Math.max(120,vw.clientWidth-20),avH=Math.max(120,vw.clientHeight-20);
+  let sc=1;
+  if(PS.zoom){
+    const ww=Math.min(b.width,avW|0),wh=Math.min(b.height,avH|0);
+    PS.ox=cl(PS.ox,0,b.width-ww);PS.oy=cl(PS.oy,0,b.height-wh);
+    const pv=mkc(ww,wh);pv.getContext('2d').drawImage(b,PS.ox,PS.oy,ww,wh,0,0,ww,wh);
+    PS.pv=pv;PS.u=Math.max(b.width,b.height)/1400;
+  }else{
+    if(PS.fitB!==b){const L=Math.max(b.width,b.height),s=Math.min(1,1400/L);PS.fit=s<1?rs(b,b.width*s,b.height*s):b;PS.fitB=b}
+    PS.pv=PS.fit;PS.u=Math.max(PS.pv.width,PS.pv.height)/1400;
+    sc=Math.min(avW/PS.pv.width,avH/PS.pv.height,3);
+  }
+  PS.vid++;PS.disp=sc;
+  const W=PS.pv.width*sc,H=PS.pv.height*sc,cv=$('ps-cv'),wr=$('ps-wrap');
+  cv.style.width=W+'px';cv.style.height=H+'px';wr.style.width=W+'px';wr.style.height=H+'px';wr.style.display='block';
+  $('ps-empty').style.display='none';
+  cv.classList.toggle('pan',PS.zoom);
+  draw();
+}
+function info(){
+  const b=PS.base;if(!b)return;
+  $('ps-w').value=b.width;$('ps-h').value=b.height;$('ps-le').value='';sizeInfo();
+}
+function sizeInfo(){
+  const b=PS.base;if(!b){$('ps-sz').textContent='Pehle photo open karo';return}
+  const W=+$('ps-w').value||0,H=+$('ps-h').value||0,mp=W*H/1e6;
+  $('ps-sz').innerHTML='Abhi: <b>'+b.width+'&times;'+b.height+'</b> ('+(b.width*b.height/1e6).toFixed(1)+' MP)<br>Naya: <b>'+W+'&times;'+H+'</b> ('+mp.toFixed(1)+' MP)'+(mp>MAXMP?' <b style="color:#d62828">&#9888; bahut bada</b>':'');
+}
+
+/* ---------- history ---------- */
+function push(old){PS.hist.push(old);if(PS.hist.length>6)PS.hist.shift();$('ps-un').disabled=false}
+function setBase(c){PS.base=c;info();view()}
+function undo(){
+  if(!PS.hist.length)return;
+  if(PS.crop)crShow(false);
+  PS.base=PS.hist.pop();$('ps-un').disabled=!PS.hist.length;info();view();
+}
+
+/* ---------- open photo ---------- */
+function load(file){
+  if(!file)return;
+  if(!/^image\//.test(file.type)&&!/\.(jpe?g|png|webp|gif|bmp|avif|heic|heif)$/i.test(file.name||'')){toast('Ye image file nahi lag rahi');return}
+  const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{
+    URL.revokeObjectURL(url);
+    const w=im.naturalWidth,h=im.naturalHeight;
+    if(!w||!h){toast('Photo open nahi hui');return}
+    const c=mkc(w,h);c.getContext('2d').drawImage(im,0,0);
+    PS.name=((file.name||'photo').replace(/\.[^.]+$/,'')||'photo');
+    PS.hist=[];$('ps-un').disabled=true;PS.P={...PSD};PS.zoom=false;$('ps-zm').classList.remove('on');
+    if(PS.crop)crShow(false);
+    syncUI();setBase(c);
+  };
+  im.onerror=()=>{URL.revokeObjectURL(url);toast('Photo open nahi hui (HEIC ho to pehle JPG me badlo)')};
+  im.src=url;
+}
+
+/* ---------- sliders ---------- */
+const SL=[['h','Light'],['br','Brightness',-100,100],['co','Contrast',-100,100],['mt','Midtones (dark / bright)',-100,100],
+  ['h','Color'],['sa','Saturation',-100,100],['wa','Warmth (cool \u2194 warm)',-100,100],['hu','Hue',-180,180],
+  ['h','Detail & effects'],['sh','Sharpen',0,200],['dn','Noise remove',0,100],['bl','Blur',0,20],['vg','Vignette',0,100]];
+{
+  const box=$('ps-sl');
+  SL.forEach(s=>{
+    if(s[0]==='h'){const h=document.createElement('h5');h.textContent=s[1];box.appendChild(h);return}
+    const row=document.createElement('div');row.className='psl';
+    row.innerHTML='<span title="Double-click: reset">'+s[1]+'</span><b id="ps-v-'+s[0]+'">0</b><input id="ps-s-'+s[0]+'" type="range" min="'+s[2]+'" max="'+s[3]+'" value="0">';
+    box.appendChild(row);
+    const inp=row.querySelector('input'),val=row.querySelector('b');
+    inp.oninput=()=>{PS.P[s[0]]=+inp.value;val.textContent=inp.value;sched()};
+    row.querySelector('span').ondblclick=()=>{inp.value=0;inp.oninput()};
+  });
+}
+function syncUI(){
+  SL.forEach(s=>{if(s[0]==='h')return;$('ps-s-'+s[0]).value=PS.P[s[0]];$('ps-v-'+s[0]).textContent=PS.P[s[0]]});
+  document.querySelectorAll('#ps-fl button').forEach(b=>b.classList.toggle('on',b.dataset.f===PS.P.fl));
+}
+$('ps-rst').onclick=()=>{PS.P={...PSD};syncUI();sched()};
+document.querySelectorAll('#ps-fl button').forEach(b=>b.onclick=()=>{PS.P.fl=b.dataset.f;syncUI();sched()});
+$('ps-auto').onclick=()=>{
+  if(!PS.pv){toast('Pehle photo open karo');return}
+  const d=PS.pv.getContext('2d',{willReadFrequently:true}).getImageData(0,0,PS.pv.width,PS.pv.height).data;
+  const hist=new Uint32Array(256);let n=0;
+  for(let i=0;i<d.length;i+=16){hist[((d[i]*299+d[i+1]*587+d[i+2]*114)/1000)|0]++;n++}
+  let a=0,lo=0,hi=255;
+  for(let i=0;i<256;i++){a+=hist[i];if(a>=n*.005){lo=i;break}}
+  a=0;for(let i=255;i>=0;i--){a+=hist[i];if(a>=n*.005){hi=i;break}}
+  Object.assign(PS.P,{lo:Math.min(lo,35),hi:Math.max(hi,215),sa:12,sh:35,fl:'none'});
+  syncUI();sched();
+};
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('#ps .ptabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#ps .ptabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('#ps .pp').forEach(p=>p.classList.toggle('on',p.dataset.p===b.dataset.t));
+});
+
+/* ---------- resolution ---------- */
+$('ps-w').oninput=()=>{if($('ps-lk').checked&&PS.base)$('ps-h').value=Math.round($('ps-w').value*PS.base.height/PS.base.width);sizeInfo()};
+$('ps-h').oninput=()=>{if($('ps-lk').checked&&PS.base)$('ps-w').value=Math.round($('ps-h').value*PS.base.width/PS.base.height);sizeInfo()};
+document.querySelectorAll('#ps [data-k]').forEach(b=>b.onclick=()=>{
+  if(!PS.base){toast('Pehle photo open karo');return}
+  const k=+b.dataset.k;$('ps-w').value=Math.round(PS.base.width*k);$('ps-h').value=Math.round(PS.base.height*k);$('ps-le').value='';sizeInfo();
+});
+$('ps-le').onchange=()=>{
+  const L=+$('ps-le').value,b=PS.base;if(!L||!b)return;
+  const s=L/Math.max(b.width,b.height);$('ps-w').value=Math.round(b.width*s);$('ps-h').value=Math.round(b.height*s);sizeInfo();
+};
+$('ps-shs').oninput=()=>{$('ps-shv').textContent=$('ps-shs').value};
+$('ps-ap').onclick=async()=>{
+  const b=PS.base;if(!b){toast('Pehle photo open karo');return}
+  const W=Math.round(+$('ps-w').value),H=Math.round(+$('ps-h').value);
+  if(!(W>=1&&H>=1)){toast('W aur H sahi daalo');return}
+  if(W===b.width&&H===b.height){toast('Size pehle jaisa hi hai');return}
+  if(W*H>MAXMP*1e6||W>16384||H>16384){toast('Itna bada size is device par nahi banega (max ~'+MAXMP+' MP)');return}
+  busy(true);await nap();
+  try{
+    const up=W>b.width||H>b.height;let src=b;
+    if(up&&$('ps-pdn').checked){
+      src=mkc(b.width,b.height);src.getContext('2d').drawImage(b,0,0);
+      const x=src.getContext('2d',{willReadFrequently:true}),img=x.getImageData(0,0,src.width,src.height);
+      denoise(img.data,src.width,src.height,Math.max(0.8,Math.max(src.width,src.height)/1400*1.4),35);x.putImageData(img,0,0);
+    }
+    const n=rs(src,W,H);
+    if(up&&$('ps-psh').checked&&+$('ps-shs').value>0){
+      const f=Math.max(W/b.width,H/b.height),x=n.getContext('2d',{willReadFrequently:true}),img=x.getImageData(0,0,W,H);
+      unsharp(img.data,W,H,cl(0.5*f+0.3,0.8,4),+$('ps-shs').value/100);x.putImageData(img,0,0);
+    }
+    push(b);setBase(n);toast('Done: '+W+'\u00d7'+H);
+  }catch(err){toast('Fail: '+(err&&err.message||err)+' \u2014 chhota size try karo')}
+  busy(false);
+};
+
+/* ---------- rotate / flip / straighten ---------- */
+function rot(dir){
+  const b=PS.base;if(!b)return;
+  const c=mkc(b.height,b.width),x=c.getContext('2d');
+  x.translate(c.width/2,c.height/2);x.rotate(dir*Math.PI/2);x.drawImage(b,-b.width/2,-b.height/2);
+  push(b);setBase(c);
+}
+function flip(h){
+  const b=PS.base;if(!b)return;
+  const c=mkc(b.width,b.height),x=c.getContext('2d');
+  if(h){x.translate(b.width,0);x.scale(-1,1)}else{x.translate(0,b.height);x.scale(1,-1)}
+  x.drawImage(b,0,0);push(b);setBase(c);
+}
+$('ps-rl').onclick=()=>rot(-1);$('ps-rr').onclick=()=>rot(1);
+$('ps-fh').onclick=()=>flip(true);$('ps-fv').onclick=()=>flip(false);
+$('ps-an').oninput=()=>{$('ps-anv').textContent=$('ps-an').value+'\u00b0'};
+$('ps-anb').onclick=async()=>{
+  const b=PS.base,deg=+$('ps-an').value;if(!b||!deg)return;
+  busy(true);await nap();
+  const t=Math.abs(deg)*Math.PI/180,W=b.width,H=b.height,s=Math.cos(t)+Math.sin(t)*Math.max(W/H,H/W);
+  const c=mkc(W,H),x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+  x.translate(W/2,H/2);x.rotate(deg*Math.PI/180);x.scale(s,s);x.drawImage(b,-W/2,-H/2);
+  push(b);setBase(c);$('ps-an').value=0;$('ps-anv').textContent='0\u00b0';busy(false);
+};
+
+/* ---------- crop ---------- */
+function crDraw(){
+  const c=PS.cr,e=$('ps-crop'),b=PS.base;
+  e.style.left=c.x*100+'%';e.style.top=c.y*100+'%';e.style.width=c.w*100+'%';e.style.height=c.h*100+'%';
+  $('ps-ci').textContent='Crop size: '+Math.round(c.w*b.width)+' \u00d7 '+Math.round(c.h*b.height)+' px';
+}
+function crReset(){
+  const b=PS.base,r=PS.ratio;let w=.9,h=.9;
+  if(r){h=w*b.width/(r*b.height);if(h>.9){h=.9;w=h*r*b.height/b.width}}
+  PS.cr={x:(1-w)/2,y:(1-h)/2,w,h};crDraw();
+}
+function crShow(on){
+  if(on&&!PS.base){toast('Pehle photo open karo');return}
+  PS.crop=on;$('ps-crop').style.display=on?'block':'none';
+  $('ps-cok').disabled=$('ps-cno').disabled=!on;$('ps-cs').classList.toggle('on',on);
+  if(on){
+    if(PS.zoom){PS.zoom=false;$('ps-zm').classList.remove('on');view()}
+    crReset();
+  }else $('ps-ci').textContent='';
+}
+$('ps-cs').onclick=()=>crShow(!PS.crop);
+$('ps-cno').onclick=()=>crShow(false);
+$('ps-ra').onchange=()=>{PS.ratio=+$('ps-ra').value;if(PS.crop)crReset()};
+$('ps-cok').onclick=()=>{
+  const b=PS.base,c=PS.cr;if(!b||!c)return;
+  const x=Math.round(c.x*b.width),y=Math.round(c.y*b.height),w=Math.max(1,Math.round(c.w*b.width)),h=Math.max(1,Math.round(c.h*b.height));
+  const n=mkc(w,h);n.getContext('2d').drawImage(b,x,y,w,h,0,0,w,h);
+  crShow(false);push(b);setBase(n);
+};
+$('ps-crop').addEventListener('pointerdown',ev=>{
+  ev.preventDefault();ev.stopPropagation();
+  const s=ev.target.dataset.s||'mv',r0={...PS.cr},wr=$('ps-wrap').getBoundingClientRect(),sx=ev.clientX,sy=ev.clientY,b=PS.base,R=PS.ratio,el=$('ps-crop');
+  try{el.setPointerCapture(ev.pointerId)}catch(_){}
+  const mv=e2=>{
+    const dx=(e2.clientX-sx)/wr.width,dy=(e2.clientY-sy)/wr.height;let{x,y,w,h}=r0;
+    if(s==='mv'){x=cl(r0.x+dx,0,1-w);y=cl(r0.y+dy,0,1-h)}
+    else{
+      if(s.includes('l')){x=r0.x+dx;w=r0.w-dx}
+      if(s.includes('r')){w=r0.w+dx}
+      if(s.includes('t')){y=r0.y+dy;h=r0.h-dy}
+      if(s.includes('b')){h=r0.h+dy}
+      if(R){
+        const k=b.width/(R*b.height);
+        if(s==='t'||s==='b'){w=h/k;x=r0.x+(r0.w-w)/2}
+        else{
+          h=w*k;
+          x=s.includes('l')?r0.x+r0.w-w:r0.x;
+          if(s.includes('t'))y=r0.y+r0.h-h;else if(s.includes('b')||s==='l'||s==='r')y=(s==='l'||s==='r')?r0.y+(r0.h-h)/2:r0.y;
+        }
+      }
+      if(w<.03||h<.03||x<-1e-6||y<-1e-6||x+w>1+1e-6||y+h>1+1e-6)return;
+    }
+    PS.cr={x,y,w,h};crDraw();
+  };
+  const up=()=>{el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up)};
+  el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+});
+
+/* ---------- compare / zoom 100% / pan ---------- */
+{
+  const cmp=$('ps-cmp');
+  const on=e=>{e.preventDefault();PS.show0=true;draw();try{cmp.setPointerCapture(e.pointerId)}catch(_){}};
+  const off=()=>{PS.show0=false;draw()};
+  cmp.addEventListener('pointerdown',on);cmp.addEventListener('pointerup',off);cmp.addEventListener('pointercancel',off);cmp.addEventListener('pointerleave',off);
+}
+$('ps-zm').onclick=()=>{
+  const b=PS.base;if(!b){toast('Pehle photo open karo');return}
+  if(PS.crop)crShow(false);
+  PS.zoom=!PS.zoom;$('ps-zm').classList.toggle('on',PS.zoom);
+  if(PS.zoom){
+    const vw=$('ps-view');PS.ox=Math.round((b.width-Math.min(b.width,vw.clientWidth-20))/2);PS.oy=Math.round((b.height-Math.min(b.height,vw.clientHeight-20))/2);
+  }
+  view();
+};
+$('ps-cv').addEventListener('pointerdown',ev=>{
+  if(!PS.base||PS.crop)return;
+  ev.preventDefault();const cv=$('ps-cv');
+  try{cv.setPointerCapture(ev.pointerId)}catch(_){}
+  if(!PS.zoom){PS.show0=true;draw();const up=()=>{PS.show0=false;draw();cv.removeEventListener('pointerup',up);cv.removeEventListener('pointercancel',up)};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);return}
+  let lx=ev.clientX,ly=ev.clientY,pend=0;
+  const mv=e2=>{PS.ox-=e2.clientX-lx;PS.oy-=e2.clientY-ly;lx=e2.clientX;ly=e2.clientY;if(!pend){pend=1;requestAnimationFrame(()=>{pend=0;view()})}};
+  const up=()=>{cv.removeEventListener('pointermove',mv);cv.removeEventListener('pointerup',up);cv.removeEventListener('pointercancel',up)};
+  cv.addEventListener('pointermove',mv);cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+});
+
+/* ---------- download ---------- */
+$('ps-q').oninput=()=>{$('ps-qv').textContent=$('ps-q').value};
+const toBlob=(c,m,q)=>new Promise(r=>c.toBlob(r,m,q));
+$('ps-dl').onclick=async()=>{
+  const b=PS.base;if(!b){toast('Pehle photo open karo');return}
+  busy(true);await nap();
+  try{
+    let out=isDef(PS.P)?b:full(b,PS.P);
+    const fmt=$('ps-fmt').value,mime={jpg:'image/jpeg',png:'image/png',webp:'image/webp'}[fmt];
+    if(fmt==='jpg'){const f=mkc(out.width,out.height),fx=f.getContext('2d');fx.fillStyle='#fff';fx.fillRect(0,0,f.width,f.height);fx.drawImage(out,0,0);out=f}
+    const q=+$('ps-q').value/100,maxKB=+$('ps-kb').value||0;
+    let blob=await toBlob(out,mime,q);
+    if(!blob){toast('Download nahi bana \u2014 size kam karo ya format badlo');busy(false);return}
+    if(maxKB&&fmt==='png')toast('KB limit sirf JPG / WEBP me chalti hai');
+    else if(maxKB&&blob.size>maxKB*1024){
+      let lo=0.05,hi=q,best=null;
+      const t0=await toBlob(out,mime,lo);
+      if(t0&&t0.size<=maxKB*1024){
+        best=t0;
+        for(let i=0;i<7;i++){const mid=(lo+hi)/2,t=await toBlob(out,mime,mid);if(t&&t.size<=maxKB*1024){best=t;lo=mid}else hi=mid}
+      }
+      if(best)blob=best;else toast('Itne KB me nahi aa paya \u2014 pehle size (pixels) kam karo');
+    }
+    saveBlob(blob,PS.name+'-edited.'+fmt);
+    toast('Download: '+out.width+'\u00d7'+out.height+' \u00b7 '+Math.round(blob.size/1024)+' KB');
+  }catch(err){toast('Fail: '+(err&&err.message||err))}
+  busy(false);
+};
+
+/* ---------- open / close / input ---------- */
+function open(on){
+  PS.open=on;$('ps').style.display=on?'flex':'none';
+  if(on&&PS.base)requestAnimationFrame(view);
+  if(!on&&PS.crop)crShow(false);
+}
+$('t-photo').onclick=()=>open(true);
+$('ps-x').onclick=()=>open(false);
+$('ps-f').onchange=e=>{load(e.target.files[0]);e.target.value=''};
+{
+  const v=$('ps-view');
+  v.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();v.classList.add('dg')});
+  v.addEventListener('dragleave',()=>v.classList.remove('dg'));
+  v.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();v.classList.remove('dg');load(e.dataTransfer.files[0])});
+}
+document.addEventListener('paste',e=>{
+  if(!PS.open)return;
+  for(const it of e.clipboardData.items)if(it.type.startsWith('image/')){load(it.getAsFile());e.preventDefault();return}
+});
+document.addEventListener('keydown',e=>{
+  if(!PS.open)return;
+  e.stopPropagation();
+  if(e.key==='Escape')open(false);
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo()}
+},true);
+$('ps-un').onclick=undo;
+window.addEventListener('resize',()=>{if(PS.open&&PS.base)view()});
+})();
 </script>
 </body>
 </html>
