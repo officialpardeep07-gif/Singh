@@ -150,6 +150,8 @@ body.mgon .mg{display:block}
 #sh .auto{display:flex;gap:6px;align-items:center;margin-top:8px}
 /* ===== Photo Studio ===== */
 #tt{z-index:60}
+#aoc{position:fixed;left:10px;bottom:10px;background:var(--ink);color:#fff;padding:7px 8px 7px 14px;border-radius:20px;font-size:13px;z-index:60;display:none;align-items:center;gap:8px;box-shadow:0 4px 16px #0006;max-width:90vw}
+#aoc button{background:#ffffff26;color:#fff;border:0;border-radius:50%;width:24px;height:24px;cursor:pointer;padding:0;line-height:24px}
 #ps{position:fixed;inset:0;background:#0b1224;z-index:45;display:none;flex-direction:column;color:var(--ink)}
 #ps .phd{background:var(--ink);color:#fff;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px}
 #ps .prow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -215,7 +217,7 @@ body.mgon .mg{display:block}
   <button id="pb">Page border</button>
   <button id="t-area" title="Select written area, then copy / move it anywhere">Copy area</button>
   <button id="t-img">Add photo</button>
-  <button id="t-ocr" title="Jis PDF me text select nahi hota (image / CorelDRAW curves / pehle save kiya hua), usko scan karke text editable banao">Make text editable (OCR)</button><button id="t-ocra" title="Jo text editable banana hai sirf usko drag karke mark karo, sirf wahi scan hoga">OCR: mark area</button><select id="ocl" title="Text ki language"><option value="eng">English</option><option value="hin+eng">Hindi + English</option></select>
+  <button id="t-ocr" title="Jis PDF me text select nahi hota (image / CorelDRAW curves / pehle save kiya hua), usko scan karke text editable banao">Make text editable (OCR)</button><button id="t-ocra" title="Jo text editable banana hai sirf usko drag karke mark karo, sirf wahi scan hoga">OCR: mark area</button><select id="ocl" title="Text ki language"><option value="eng">English</option><option value="hin+eng">Hindi + English</option></select><label style="display:inline-flex;gap:4px;align-items:center" title="PDF kholte hi image / scan / curves wale text ko apne aap editable bana do (normal PDF jaisa). Hindi PDF ho to pehle Hindi + English chuno."><input id="ao" type="checkbox" checked><small style="opacity:1">Auto text edit</small></label>
   <button id="t-qedit" title="PDF me jo QR pehle se hai: usko select karo, app scan karke uska link dikhayega, phir link badal sako">Edit QR</button>
   <button id="t-qr" title="Koi bhi link / website daalo, uska QR code banao (scan karte hi us link par le jayega)">QR code</button>
   <button id="t-share" title="Phone aur PC ke beech file bhejo / lo (same site kholke code ya QR se connect)">Share files</button>
@@ -331,7 +333,7 @@ body.mgon .mg{display:block}
     </div>
   </div>
 </div>
-<div id="tt"></div>
+<div id="tt"></div><div id="aoc"><span></span><button id="aox" title="Auto scan roko">&#10005;</button></div>
 <div id="sh"><div class="box">
   <div class="hd"><b>Share files &middot; Phone &#8644; PC</b><button id="sh-x">&#10005; Close</button></div>
   <div id="sh-st"><i id="sh-dot"></i><span id="sh-stt">Connected nahi hai</span></div>
@@ -603,6 +605,7 @@ async function renderPage(pg){
   $('pages').appendChild(d);
   d._pg=pg;io.observe(d);
   const tc=await pg.getTextContent(),L=d.querySelector('.layer');
+  d._tc=tc.items.reduce((a,it)=>a+it.str.trim().length,0);
   tc.items.forEach(it=>{
     if(!it.str.trim())return;
     const t=pdfjsLib.Util.transform(vc.transform,it.transform),fs=Math.hypot(t[2],t[3]);
@@ -644,7 +647,7 @@ async function openPdf(file,asRef){
   if(!file||LOADING)return;
   if(asRef&&!docs.length)return alert('Pehle Main PDF kholo (Open PDF) ya New sheet banao, phir "+ Another PDF" se doosri kholo');
   if(!asRef&&docs.length&&!confirm('Main PDF badal rahe ho? Main ke edits chale jayenge.'))return;
-  LOADING=true;
+  LOADING=true;let ap=[];
   try{
     const data=new Uint8Array(await file.arrayBuffer());
     const pdf=await pdfjsLib.getDocument({data:data.slice()}).promise;
@@ -653,8 +656,10 @@ async function openPdf(file,asRef){
     if(asRef){docs.push(nd);AD=docs.length-1}else{if(docs.length)docs[0]=nd;else docs.push(nd);AD=0}
     $('pages').innerHTML='';U.length=0;S.bytes=data;$('stage').scrollTop=0;upd();renderTabs();
     for(let i=1;i<=pdf.numPages;i++)await renderPage(await pdf.getPage(i));
+    ap=allPages();
   }catch(err){alert('Could not open this PDF: '+err.message)}
   LOADING=false;
+  autoOcr(ap);
 }
 $('pf').onchange=e=>{openPdf(e.target.files[0],false);e.target.value=''};
 $('pr').onchange=async e=>{for(const f of [...e.target.files])await openPdf(f,true);e.target.value=''};
@@ -729,7 +734,8 @@ $('q-dl').onclick=()=>{
 };
 
 /* ===== OCR: image / curves wale text ko bhi editable banao ===== */
-let OW=null,OL='',OBUSY=false;
+let OW=null,OL='',OBUSY=false,OCRNEW=[];
+const txBox=e=>{const l=parseFloat(e.style.left)||0,t=parseFloat(e.style.top)||0,w=Math.max(parseFloat(e.style.minWidth)||0,e.offsetWidth||0),h=Math.max(parseFloat(e.style.height)||0,e.offsetHeight||0);return{l,t,r:l+w,b:t+h}};
 function loadTess(){return new Promise((res,rej)=>{if(window.Tesseract)return res();const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=res;s.onerror=()=>rej(new Error('OCR library load nahi hui, internet check karo'));document.head.appendChild(s)})}
 async function getOcr(lang){
   if(OW&&OL===lang)return OW;
@@ -738,6 +744,7 @@ async function getOcr(lang){
 }
 let OCRP=null;
 async function ocrPage(d,worker,a){
+  OCRNEW=[];
   const bw0=+d.dataset.bw,bh0=+d.dataset.bh,cv=d.querySelector('canvas'),L=d.querySelector('.layer');
   const R=a||{x0:0,y0:0,x1:bw0,y1:bh0},bw=R.x1-R.x0,bh=R.y1-R.y0;
   let c=null,P=1;
@@ -753,7 +760,7 @@ async function ocrPage(d,worker,a){
   if(!c)return 0;
   const res=await worker.recognize(c);c.width=c.height=0;
   const lines=(res.data&&res.data.lines)||[];
-  const real=[...L.children].filter(e=>e.classList.contains('tx')).map(e=>({l:e.offsetLeft,t:e.offsetTop,r:e.offsetLeft+e.offsetWidth,b:e.offsetTop+e.offsetHeight}));
+  const real=[...L.children].filter(e=>e.classList.contains('tx')).map(txBox);
   let n=0;
   for(const ln of lines){
     const txt=(ln.text||'').replace(/\s+/g,' ').trim();
@@ -761,17 +768,18 @@ async function ocrPage(d,worker,a){
     if(!/[A-Za-z0-9\u0900-\u097F]/.test(txt))continue;
     const b=ln.bbox,x0=R.x0+b.x0/P,x1=R.x0+b.x1/P,y0=R.y0+b.y0/P,y1=R.y0+b.y1/P,h=y1-y0,w=x1-x0;
     if(h<4||w<4)continue;
-    const cx=(x0+x1)/2,cy=(y0+y1)/2;
-    if(real.some(r=>cx>=r.l&&cx<=r.r&&cy>=r.t&&cy<=r.b))continue; // jo text pehle se editable hai, dobara mat banao
+    let ov=0;for(const r of real){const iw=Math.min(x1,r.r)-Math.max(x0,r.l),ih=Math.min(y1,r.b)-Math.max(y0,r.t);if(iw>0&&ih>0)ov+=iw*ih}
+    if(ov>w*h*.4)continue; // jo text pehle se editable hai, dobara mat banao
     const fs=Math.max(6,h*1.0);
     const e=document.createElement('div');e.className='tx';e.contentEditable='false';e.spellcheck=false;e.title='Double-click to edit';e.textContent=txt;e.dataset.ocr='1';
     Object.assign(e.style,{left:x0+'px',top:(y0-fs*.1)+'px',fontSize:fs+'px',minWidth:w+'px',height:fs*1.2+'px'});
-    L.appendChild(e);n++;
+    L.appendChild(e);OCRNEW.push(e);n++;
   }
   return n;
 }
 $('t-ocr').onclick=async()=>{
   if(OBUSY)return;
+  if(AUTOB){toast('Auto text scan chal raha hai. Khatam hone do ya \u2715 dabake roko.');return}
   const ps=allPages();if(!ps.length)return alert('Open a PDF first.');
   let list=[curPage()];
   if(ps.length>1&&confirm('OK = sab pages ka text scan karo (time lagega)\nCancel = sirf current page'))list=ps;
@@ -792,6 +800,7 @@ $('t-ocr').onclick=async()=>{
 
 function startOcrA(d,L,x0,y0){
   if(OBUSY)return;
+  if(AUTOB){toast('Auto text scan chal raha hai. Khatam hone do ya \u2715 dabake roko.');return}
   const rb=document.createElement('div');rb.className='rb';L.appendChild(rb);
   const r0=L.getBoundingClientRect(),bw=+d.dataset.bw,bh=+d.dataset.bh;let X=x0,Y=y0;
   const mv=m=>{X=clamp((m.clientX-r0.left)/Z,0,bw);Y=clamp((m.clientY-r0.top)/Z,0,bh);
@@ -813,6 +822,55 @@ function startOcrA(d,L,x0,y0){
   window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);
 }
 $('t-ocra').onclick=()=>{if(!allPages().length)return alert('Open a PDF first.');setTool(S.tool==='ocra'?'select':'ocra');if(S.tool==='ocra')toast('Jo text editable banana hai uske upar drag karke box banao')};
+
+/* ===== Auto text-edit mode: PDF khulte hi image / scan wale text ko bhi editable bana do ===== */
+let AOT=0,AUTOB=0;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function aoChip(t){const c=$('aoc');if(!t){c.style.display='none';return}c.firstChild.textContent=t;c.style.display='flex'}
+$('aox').onclick=()=>{AOT++;aoChip('');toast('Auto text scan roka. Baaki ke liye \"Make text editable (OCR)\" use karo.')};
+function patchSnaps(d,html){ // undo purane snapshot me OCR text ko na hata de
+  if(!html)return;
+  const seen=new Set(),fix=s=>{if(!s||seen.has(s))return;seen.add(s);const r=s.find(x=>x.d===d);if(r){r.h+=html;s.k=keyOf(s)}};
+  U.forEach(fix);docs.forEach(x=>(x.U||[]).forEach(fix));
+}
+async function pageHasImages(pg){
+  try{
+    const ol=await pg.getOperatorList(),O=pdfjsLib.OPS;
+    const im=new Set(['paintImageXObject','paintInlineImageXObject','paintImageMaskXObject','paintImageMaskXObjectGroup','paintImageXObjectRepeat','paintImageMaskXObjectRepeat','paintJpegXObject'].map(k=>O[k]).filter(v=>v!==undefined));
+    return ol.fnArray.some(f=>im.has(f));
+  }catch(_){return true}
+}
+async function autoOcr(pages){
+  if(!pages.length||!$('ao').checked)return;
+  const tok=++AOT;
+  const info=[];
+  for(const d of pages){
+    if(tok!==AOT)return;
+    const sparse=(d._tc||0)<60;
+    info.push({d,sparse,need:sparse||await pageHasImages(d._pg)});
+  }
+  let q=info.filter(x=>x.need);
+  if(!q.length)return;
+  const cp=curPage();
+  q.sort((a,b)=>(b.sparse-a.sparse)||((b.d===cp)-(a.d===cp)));
+  while((OBUSY||AUTOB)&&tok===AOT)await sleep(300);
+  if(tok!==AOT)return;
+  AUTOB=tok;let tot=0,i=0;
+  try{
+    aoChip('Text edit mode ban raha hai\u2026');
+    await loadTess();
+    const w=await getOcr($('ocl').value);
+    for(const x of q){
+      if(tok!==AOT)break;
+      i++;aoChip('Text edit mode: page '+i+'/'+q.length+' scan ho raha hai\u2026');
+      OCRP=null;
+      const n=await ocrPage(x.d,w);
+      if(n){tot+=n;patchSnaps(x.d,OCRNEW.map(e=>e.outerHTML).join(''))}
+    }
+    if(tok===AOT)toast(tot?('Text edit mode ready ('+tot+' lines). Kisi bhi text par double-click karke edit karo.'):'Image wala naya text nahi mila \u2014 jo text hai wo pehle se editable hai.');
+  }catch(err){if(tok===AOT)toast('Auto text scan nahi chala: '+(err&&err.message||err))}
+  if(AUTOB===tok){AUTOB=0;if(tok===AOT)aoChip('')}
+}
 
 /* ===== Edit QR: PDF ke andar ka QR scan karo, link badlo, naya QR lagao ===== */
 function qrMods(text){qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8'];const q=qrcode(0,'M');q.addData(text);q.make();return q.getModuleCount()}
