@@ -37,9 +37,10 @@ html,body{overscroll-behavior:none}
 .page{position:relative;margin:0 auto 14px;background:#fff;box-shadow:0 2px 12px #0003}
 .page canvas{width:100%;height:100%;display:block}
 .layer{position:absolute;inset:0}
-.tx{position:absolute;color:transparent;caret-color:#000;white-space:pre;line-height:1.2;font-family:Arial,Helvetica,sans-serif;outline:none;cursor:text;padding:0 1px}
+.tx{position:absolute;color:transparent;caret-color:#000;white-space:pre;line-height:1.2;font-family:Arial,Helvetica,sans-serif;outline:none;cursor:default;padding:0 1px;user-select:none;-webkit-user-select:none}
+.tx.editing{cursor:text;user-select:text;-webkit-user-select:text}
 .tx:hover{outline:1px solid #14213d30}
-.tx:focus{outline:1px solid #1a73e8}
+.tx:focus,.tx.editing{outline:1px solid #1a73e8}
 .sheet{position:absolute;left:0;top:0;transform-origin:0 0}
 #cb{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:var(--ink);color:#fff;padding:8px 10px;border-radius:10px;box-shadow:0 4px 16px #0006;z-index:20;max-width:96vw}
 #cb button.ok{background:#d62828;border-color:#d62828;font-weight:600}
@@ -353,7 +354,7 @@ body.mgon .mg{display:block}
     <button id="sh-leave">Disconnect</button>
   </div>
 </div></div>
-<div id="stage"><div id="pages"><p class="empty">Open a PDF (or drop it here) to start editing. Tap any text to change or delete it.</p></div></div>
+<div id="stage"><div id="pages"><p class="empty">Open a PDF (or drop it here) to start editing. Double-click any text to edit it (same font, size and colour).</p></div></div>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -409,6 +410,38 @@ function ink(e,bg){
     return best>120?'rgb('+r+','+g+','+bl+')':'#000000';
   }catch(_){return'#000000'}
 }
+/* original font detection: copy the PDF's own font (name / bold / italic / serif / mono) and letter-spacing onto the editable text */
+function fontInfoFor(t,d){
+  if(t.dataset.fd)return;t.dataset.fd='1';
+  let name='',bold=false,ital=false,fb='';
+  try{
+    const pg=d&&d._pg,id=t.dataset.fn,fo=(pg&&id&&pg.commonObjs.has(id))?pg.commonObjs.get(id):null;
+    if(fo){name=fo.name||'';bold=!!(fo.bold||fo.black);ital=!!fo.italic;fb=fo.fallbackName||''}
+  }catch(_){}
+  const clean=name.replace(/^[A-Z]{6}\+/,'');
+  if(/bold|black|heavy|demi/i.test(clean))bold=true;
+  if(/italic|oblique/i.test(clean))ital=true;
+  const mono=fb==='monospace'||/courier|mono|consol|menlo/i.test(clean);
+  const serif=!mono&&(fb==='serif'||/times|georgia|garamond|palatino|cambria|minion|bookman|century|bodoni|didot|roman/i.test(clean)&&!/sans/i.test(clean));
+  const kind=mono?'mono':serif?'serif':'sans';
+  let base=clean.split(/[-,]/)[0].replace(/(PSMT|MT|PS)$/,'').replace(/([a-z])([A-Z])/g,'$1 $2').trim();
+  const gen=kind==='mono'?'"Courier New",Courier,monospace':kind==='serif'?'"Times New Roman",Times,serif':'Arial,Helvetica,sans-serif';
+  const fam=(base&&/^[\w ]+$/.test(base)?'"'+base+'",':'')+gen;
+  let std='';
+  if(!name)std=kind==='mono'?'Courier':kind==='serif'?'Times':'Helvetica';
+  else if(kind==='mono'&&/courier/i.test(clean))std='Courier';
+  else if(kind==='serif'&&/times/i.test(clean))std='Times';
+  else if(kind==='sans'&&/arial|helvetica/i.test(clean))std='Helvetica';
+  t.dataset.std=std;
+  t.style.fontFamily=fam;t.style.fontWeight=bold?'700':'400';t.style.fontStyle=ital?'italic':'normal';
+  /* match original text width with letter-spacing so the new text looks the same */
+  try{
+    const fs=parseFloat(getComputedStyle(t).fontSize),cx=document.createElement('canvas').getContext('2d'),str=t.textContent,ow=+t.dataset.ow;
+    cx.font=(ital?'italic ':'')+(bold?'bold ':'')+fs+'px '+fam;
+    const m=cx.measureText(str).width;
+    if(ow>0&&str.length>1){let ls=(ow-m)/str.length;if(Math.abs(ls)>fs*.003){ls=Math.max(-fs*.12,Math.min(fs*.12,ls));t.style.letterSpacing=ls.toFixed(3)+'px'}}
+  }catch(_){}
+}
 function markEd(e){if(!e.classList.contains('ed')){const bg=sampleBg(e);e.style.background=bg;e.style.color=ink(e,bg);e.classList.add('ed')}}
 const touch=e=>{if(e.classList.contains('tx'))markEd(e)};
 $('fs').oninput=()=>{const e=S.sel;if(!e)return;e.style.fontSize=Math.max(4,+$('fs').value||12)+'px';touch(e)};
@@ -440,6 +473,31 @@ function makePage(w,h,pw,ph){
   });
   L.addEventListener('focusin',e=>{const t=e.target;if(t.classList.contains('tx')||t.classList.contains('ct'))snap();if(t.classList.contains('tx'))select(t);else if(t.classList.contains('ct'))select(t.closest('.el'))});
   L.addEventListener('input',e=>{if(e.target.classList.contains('tx'))markEd(e.target)});
+  /* double-click (mouse) / double-tap (touch) to edit; single click only selects */
+  const startEdit=(t,ev)=>{
+    if(S.tool!=='select'||t.isContentEditable)return;
+    fontInfoFor(t,d);
+    t.contentEditable='true';t.classList.add('editing');t.focus();
+    let r=null;
+    try{
+      if(document.caretRangeFromPoint)r=document.caretRangeFromPoint(ev.clientX,ev.clientY);
+      else if(document.caretPositionFromPoint){const p=document.caretPositionFromPoint(ev.clientX,ev.clientY);if(p){r=document.createRange();r.setStart(p.offsetNode,p.offset);r.collapse(true)}}
+    }catch(_){}
+    const sel=getSelection();sel.removeAllRanges();
+    if(!(r&&t.contains(r.startContainer))){r=document.createRange();r.selectNodeContents(t);r.collapse(false)}
+    sel.addRange(r);
+  };
+  let lastTap={t:0,e:null};
+  L.addEventListener('dblclick',e=>{const t=e.target;if(t.classList&&t.classList.contains('tx')){e.preventDefault();startEdit(t,e)}});
+  L.addEventListener('pointerup',e=>{
+    if(e.pointerType==='mouse')return;
+    const t=e.target;if(!t.classList||!t.classList.contains('tx'))return;
+    const n=Date.now();
+    if(lastTap.e===t&&n-lastTap.t<400){lastTap={t:0,e:null};e.preventDefault();startEdit(t,e)}else lastTap={t:n,e:t};
+  });
+  L.addEventListener('click',e=>{const t=e.target;if(t.classList&&t.classList.contains('tx')&&S.tool==='select'&&!t.isContentEditable)select(t)});
+  L.addEventListener('focusout',e=>{const t=e.target;if(t.classList&&t.classList.contains('tx')&&t.isContentEditable){t.contentEditable='false';t.classList.remove('editing')}});
+  L.addEventListener('keydown',e=>{if(e.key==='Escape'&&e.target.classList&&e.target.classList.contains('tx'))e.target.blur()});
   return d;
 }
 
@@ -548,7 +606,7 @@ async function renderPage(pg){
   tc.items.forEach(it=>{
     if(!it.str.trim())return;
     const t=pdfjsLib.Util.transform(vc.transform,it.transform),fs=Math.hypot(t[2],t[3]);
-    const e=document.createElement('div');e.className='tx';e.contentEditable=true;e.spellcheck=false;e.textContent=it.str;e.dataset.it=JSON.stringify([...it.transform,it.width,it.height]);
+    const e=document.createElement('div');e.className='tx';e.contentEditable='false';e.spellcheck=false;e.title='Double-click to edit';e.textContent=it.str;e.dataset.fn=it.fontName||'';e.dataset.ow=it.width*s;e.dataset.it=JSON.stringify([...it.transform,it.width,it.height]);
     Object.assign(e.style,{left:t[4]+'px',top:(t[5]-fs*.9465)+'px',fontSize:fs+'px',minWidth:it.width*s+'px',height:fs*1.2+'px'});
     L.appendChild(e);
   });
@@ -706,7 +764,7 @@ async function ocrPage(d,worker,a){
     const cx=(x0+x1)/2,cy=(y0+y1)/2;
     if(real.some(r=>cx>=r.l&&cx<=r.r&&cy>=r.t&&cy<=r.b))continue; // jo text pehle se editable hai, dobara mat banao
     const fs=Math.max(6,h*1.0);
-    const e=document.createElement('div');e.className='tx';e.contentEditable=true;e.spellcheck=false;e.textContent=txt;e.dataset.ocr='1';
+    const e=document.createElement('div');e.className='tx';e.contentEditable='false';e.spellcheck=false;e.title='Double-click to edit';e.textContent=txt;e.dataset.ocr='1';
     Object.assign(e.style,{left:x0+'px',top:(y0-fs*.1)+'px',fontSize:fs+'px',minWidth:w+'px',height:fs*1.2+'px'});
     L.appendChild(e);n++;
   }
@@ -1008,11 +1066,11 @@ function scrubPage(doc,pg,txs){
   return done;
 }
 const col=c=>{const m=c.match(/[\d.]+/g).map(Number);return PDFLib.rgb(m[0]/255,m[1]/255,m[2]/255)};
-function textPng(lines,fs,b,color){
-  const sc=6,c=document.createElement('canvas'),x=c.getContext('2d'),font=(b?'bold ':'')+fs*sc+'px Arial, Helvetica, sans-serif';
-  x.font=font;
+function textPng(lines,fs,b,color,fam,it,ls){
+  const sc=6,c=document.createElement('canvas'),x=c.getContext('2d'),font=(it?'italic ':'')+(b?'bold ':'')+fs*sc+'px '+(fam||'Arial, Helvetica, sans-serif'),LS=(ls||0)*sc+'px';
+  x.font=font;if('letterSpacing' in x)x.letterSpacing=LS;
   const w=Math.ceil(Math.max(...lines.map(l=>x.measureText(l).width))+4),h=Math.ceil(fs*sc*1.2*lines.length);
-  c.width=w;c.height=h;x.font=font;x.fillStyle=color;x.textBaseline='alphabetic';
+  c.width=w;c.height=h;x.font=font;if('letterSpacing' in x)x.letterSpacing=LS;x.fillStyle=color;x.textBaseline='alphabetic';
   lines.forEach((l,i)=>x.fillText(l,0,fs*sc*.9465+i*fs*sc*1.2));
   return{url:c.toDataURL('image/png'),w:w/sc,h:h/sc};
 }
@@ -1237,7 +1295,7 @@ $('zo').onclick=()=>setZoom(Z/1.25);$('zi').onclick=()=>setZoom(Z*1.25);$('zl').
 $('stage').addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZoom(Z*(e.deltaY<0?1.1:1/1.1))}},{passive:false});
 
 /* ===== undo ===== */
-function snapState(){return allPages().map(d=>{const L=d.querySelector('.layer');L.querySelectorAll('.el.img').forEach(e=>{if(e._i)e.dataset.i=JSON.stringify(e._i)});const cl=L.cloneNode(true);cl.querySelectorAll('.el.img img').forEach(m=>m.removeAttribute('src'));return{d,h:cl.innerHTML,c:JSON.stringify(d._cuts)}})}
+function snapState(){return allPages().map(d=>{const L=d.querySelector('.layer');L.querySelectorAll('.el.img').forEach(e=>{if(e._i)e.dataset.i=JSON.stringify(e._i)});const cl=L.cloneNode(true);cl.querySelectorAll('.el.img img').forEach(m=>m.removeAttribute('src'));cl.querySelectorAll('.tx').forEach(x=>{x.contentEditable='false';x.classList.remove('editing')});return{d,h:cl.innerHTML,c:JSON.stringify(d._cuts)}})}
 const keyOf=s=>s.map(r=>r.d.dataset.id+'|'+r.h.replace(/ (sel|crop)(?=[" ])/g,'')+'|'+r.c).join('§');
 function snap(){const s=snapState(),k=keyOf(s),t=U[U.length-1];if(t&&t.k===k)return;s.k=k;U.push(s);if(U.length>25)U.shift();upd()}
 function upd(){$('un').disabled=!U.length}
@@ -1347,7 +1405,9 @@ async function runExport(b,label,mode){
     const{PDFDocument,StandardFonts,rgb}=PDFLib;
     const out=await PDFDocument.create();
     const src=S.bytes?await PDFDocument.load(S.bytes,{ignoreEncryption:true}):null;
-    const reg=await out.embedFont(StandardFonts.Helvetica),bold=await out.embedFont(StandardFonts.HelveticaBold);
+    const FC={},getF=async(k,b,i)=>{const key=k+(b?1:0)+(i?1:0);if(FC[key])return FC[key];const SF=StandardFonts;
+      const nm=k==='Times'?(b?(i?SF.TimesRomanBoldItalic:SF.TimesRomanBold):(i?SF.TimesRomanItalic:SF.TimesRoman)):k==='Courier'?(b?(i?SF.CourierBoldOblique:SF.CourierBold):(i?SF.CourierOblique:SF.Courier)):(b?(i?SF.HelveticaBoldOblique:SF.HelveticaBold):(i?SF.HelveticaOblique:SF.Helvetica));
+      return FC[key]=await out.embedFont(nm)};
     const idxs=ps.map(p=>+p.dataset.src).filter(i=>i>=0);
     const copied=src&&idxs.length?await out.copyPages(src,idxs):[];
     let ci=0;
@@ -1392,12 +1452,14 @@ async function runExport(b,label,mode){
         if(isTx&&!e.classList.contains('ed'))continue;
         const n=isTx?e:e.querySelector('.ct'),cs=getComputedStyle(n);
         if(isTx&&!gone.has(e))pg.drawRectangle({x:X(l-1),y:Y(t+h+1),width:(w+2)*k,height:(h+2)*k,color:col(getComputedStyle(e).backgroundColor)});
-        const fs=parseFloat(cs.fontSize),isB=+cs.fontWeight>=600,ox=isTx?1:4,oy=isTx?0:2;
+        const fs=parseFloat(cs.fontSize),isB=+cs.fontWeight>=600,isI=cs.fontStyle==='italic',ls=parseFloat(cs.letterSpacing)||0,ox=isTx?1:4,oy=isTx?0:2;
         const lines=n.innerText.replace(/\n$/,'').split('\n'),top=t+oy;
-        if(/^[\x20-\x7E\xA0-\xFF]*$/.test(lines.join(''))){
-          lines.forEach((ln,i)=>pg.drawText(ln,{x:X(l+ox),y:Y(top+fs*.9465+i*fs*1.2),size:fs*k,font:isB?bold:reg,color:col(cs.color)}));
+        const std=n.dataset&&n.dataset.std!==undefined?n.dataset.std:'Helvetica';
+        if(std&&Math.abs(ls)<=fs*.02&&/^[\x20-\x7E\xA0-\xFF]*$/.test(lines.join(''))){
+          const fnt=await getF(std,isB,isI);
+          lines.forEach((ln,i)=>pg.drawText(ln,{x:X(l+ox),y:Y(top+fs*.9465+i*fs*1.2),size:fs*k,font:fnt,color:col(cs.color)}));
         }else{
-          const r=textPng(lines,fs,isB,cs.color),im=await out.embedPng(r.url);
+          const r=textPng(lines,fs,isB,cs.color,cs.fontFamily,isI,ls),im=await out.embedPng(r.url);
           pg.drawImage(im,{x:X(l+ox),y:Y(top+r.h),width:r.w*k,height:r.h*k});
         }
       }
