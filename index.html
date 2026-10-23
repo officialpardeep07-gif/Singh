@@ -348,7 +348,8 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
 #sk input:not([type=checkbox]):not([type=color]):not([type=range]):not([type=file]),#sk select{background:#0a1630;color:var(--sil);border:1px solid var(--ln);border-radius:8px;padding:6px 8px;font:inherit;width:100%;box-sizing:border-box}
 #sk input[type=color]{width:100%;height:34px;padding:2px;border-radius:8px;border:1px solid var(--ln);background:#0a1630}
 #sk input[type=file]{color:var(--mut);font-size:12px;width:100%}
-@media(max-width:760px){#sk .bd{flex-direction:column}#sk .pv{position:static;width:100%}}
+#sk .pv{max-height:calc(95vh - 90px);overflow:auto}#sk-mk{touch-action:none;cursor:grab}
+@media(max-width:760px){#sk .bd{flex-direction:column}#sk .pv{position:static;width:100%;max-height:none;overflow:visible}}
 </style>
 </head>
 <body data-bg="sky">
@@ -513,7 +514,9 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
     <div class="pv"><div class="cv"><canvas id="sk-cv"></canvas></div>
       <div class="ac"><button id="sk-png" class="go">Download PNG</button><button id="sk-pdf" class="go">A4 sheet PDF</button><button id="sk-add">Add to PDF page</button></div>
       <div class="tip" id="sk-info"></div>
-      <div class="tip">Tip: text mein <b>{n}</b> likho (jaise SPW-{n}) to har sticker par number 1 se badhta jayega. PNG ka bahar ka hissa transparent hota hai.</div></div>
+      <div class="tip">Tip: text mein <b>{n}</b> likho (jaise SPW-{n}) to har sticker par number 1 se badhta jayega. PNG ka bahar ka hissa transparent hota hai.</div>
+      <div class="tip"><b>Free shape:</b> shape mein "Free shape" chuno. Safed point ko kheencho, kisi side par click karke naya point jodo, point par double-click se hatao.</div>
+      <div id="sk-mkw" style="display:none"><div class="cv" style="padding:6px"><canvas id="sk-mk"></canvas></div><div class="ac" style="margin-top:8px"><button id="sk-mkdl" class="go">Download device photo + sticker PNG</button></div><div class="tip">Sticker ko photo par kheench ke sahi jagah rakho, size aur rotate neeche se badlo.</div></div></div>
     <div class="fm" id="sk-form"></div>
   </div></div></div>
 <div id="sh"><div class="box">
@@ -2423,7 +2426,8 @@ var FONT={sans:'"Segoe UI",Arial,sans-serif',cond:'"Arial Narrow","Bahnschrift",
 var F=[
 ['Device and size',[
  {i:'dev',l:'Device',t:'sel',o:Object.keys(DEV),c:'w2'},{i:'w',l:'Width (mm)',t:'num',v:60,min:8,max:300,st:.5},{i:'h',l:'Height (mm)',t:'num',v:30,min:8,max:300,st:.5},
- {i:'shape',l:'Shape',t:'sel',o:[['round','Rounded'],['rect','Rectangle'],['pill','Pill'],['oval','Oval / circle'],['hex','Hexagon'],['badge','Cut corners']],c:'w2'}]],
+ {i:'shape',l:'Shape',t:'sel',o:[['round','Rounded'],['rect','Rectangle'],['pill','Pill'],['oval','Oval / circle'],['hex','Hexagon'],['badge','Cut corners'],['free','Free shape (drag corners)']],c:'w2'},
+ {i:'rad',l:'Corner roundness',t:'rng',v:16,min:0,max:50,c:'w2'},{i:'reset',l:'Reset free shape',t:'btn',c:'w2'}]],
 ['Look',[
  {i:'theme',l:'Colour theme',t:'sel',o:THN,c:'w2'},{i:'c1',l:'Colour 1',t:'col',v:'#0b2a6b'},{i:'c2',l:'Colour 2',t:'col',v:'#1e90ff'},{i:'ca',l:'Accent / border',t:'col',v:'#7fe0ff'},{i:'ct',l:'Text colour',t:'col',v:'#ffffff'},
  {i:'pat',l:'Pattern',t:'sel',o:[['none','None'],['stripes','Stripes'],['dots','Dots'],['grid','Grid']]},{i:'bw',l:'Border (mm)',t:'num',v:.8,min:0,max:4,st:.1},
@@ -2435,11 +2439,15 @@ var F=[
 ['Logo and QR',[
  {i:'logo',l:'Logo',t:'sel',o:[['spw','SPW logo'],['mine','My own logo / photo'],['none','No logo']]},{i:'lpos',l:'Logo position',t:'sel',o:[['left','Left'],['right','Right'],['top','Top']]},
  {i:'lf',l:'Upload my logo / photo',t:'file',c:'w2'},{i:'qr',l:'QR code (link or text, blank = no QR)',t:'txt',c:'w2'}]],
+['Blank, photo and try-on',[
+ {i:'blank',l:'Blank sticker (no text / logo / QR)',t:'chk',v:0,c:'ck w2'},{i:'solid',l:'Solid colour (Colour 1 only)',t:'chk',v:0,c:'ck w2'},
+ {i:'bgf',l:'Photo inside sticker (background)',t:'file',c:'w2'},{i:'bgdim',l:'Darken photo',t:'rng',v:35,min:0,max:85},{i:'bgfit',l:'Photo fit',t:'sel',o:[['cover','Fill'],['contain','Fit whole']]},
+ {i:'mf',l:'Device photo (see sticker on your device)',t:'file',c:'w2'},{i:'ms',l:'Sticker size on photo (%)',t:'rng',v:30,min:5,max:100},{i:'mr',l:'Rotate sticker (deg)',t:'rng',v:0,min:-180,max:180}]],
 ['Print',[
  {i:'n',l:'Copies',t:'num',v:12,min:1,max:500,st:1},{i:'start',l:'Start number for {n}',t:'num',v:1,min:0,max:99999,st:1}]]];
 var form=q('sk-form');
 form.innerHTML=F.map(function(s){return '<fieldset><legend>'+s[0]+'</legend>'+s[1].map(function(f){
- var id='sk-'+f.i,a='',x='';
+ var id='sk-'+f.i,a='',x='';if(f.t==='btn')return '<div class="w2"><button type="button" id="'+id+'">'+f.l+'</button></div>';
  if(f.t==='sel')x='<select id="'+id+'">'+f.o.map(function(o){var v=o.push?o[0]:o,n=o.push?o[1]:o;return '<option value="'+v+'">'+n+'</option>'}).join('')+'</select>';
  else if(f.t==='chk')x='<input type="checkbox" id="'+id+'"'+(f.v?' checked':'')+'> '+f.l;
  else if(f.t==='num'||f.t==='rng')x='<input type="'+(f.t==='num'?'number':'range')+'" id="'+id+'" value="'+f.v+'" min="'+f.min+'" max="'+f.max+'"'+(f.st?' step="'+f.st+'"':'')+'>';
@@ -2456,18 +2464,25 @@ var IM={};function img(src){return IM[src]||(IM[src]=new Promise(function(r){var
 function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r)}
 function poly(c,p){p.forEach(function(a,i){i?c.lineTo(a[0],a[1]):c.moveTo(a[0],a[1])})}
 function path(c,s,W,H,n){var x=n,y=n,w=W-2*n,h=H-2*n;c.beginPath();
- if(s==='rect')c.rect(x,y,w,h);else if(s==='round')rr(c,x,y,w,h,Math.min(w,h)*.16);else if(s==='pill')rr(c,x,y,w,h,Math.min(w,h)/2);
+ if(s==='rect')c.rect(x,y,w,h);else if(s==='round')rr(c,x,y,w,h,Math.min(w,h)*V('rad')/100);else if(s==='pill')rr(c,x,y,w,h,Math.min(w,h)/2);
  else if(s==='oval')c.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,7);
  else if(s==='hex'){var k=Math.min(h*.35,w*.2);poly(c,[[x+k,y],[x+w-k,y],[x+w,y+h/2],[x+w-k,y+h],[x+k,y+h],[x,y+h/2]])}
+ else if(s==='free'){var P=PTS.map(function(a){return [x+a[0]*w,y+a[1]*h]});rpoly(c,P,V('rad')/100*Math.min(w,h))}
  else{var k2=Math.min(w,h)*.2;poly(c,[[x+k2,y],[x+w-k2,y],[x+w,y+k2],[x+w,y+h-k2],[x+w-k2,y+h],[x+k2,y+h],[x,y+h-k2],[x,y+k2]])}
  c.closePath()}
+var DP=function(){return [[0,0],[.5,0],[1,0],[1,.5],[1,1],[.5,1],[0,1],[0,.5]]},PTS=DP(),BG=null,MK=null,LR=null,PPM=8,MKX=.5,MKY=.5,DR=-1;
+function rpoly(c,P,r){var n=P.length,md=function(a,b){return [(a[0]+b[0])/2,(a[1]+b[1])/2]},s0=md(P[n-1],P[0]);c.moveTo(s0[0],s0[1]);
+ for(var i=0;i<n;i++){var a=P[i],pm=md(P[(i+n-1)%n],a),nm2=md(a,P[(i+1)%n]),v1=[pm[0]-a[0],pm[1]-a[1]],v2=[nm2[0]-a[0],nm2[1]-a[1]],l1=Math.hypot(v1[0],v1[1]),l2=Math.hypot(v2[0],v2[1]),r2=0;
+  if(l1>1e-6&&l2>1e-6){var cs=Math.max(-1,Math.min(1,(v1[0]*v2[0]+v1[1]*v2[1])/(l1*l2))),th=Math.acos(cs);r2=th<3.1?Math.min(r,Math.min(l1,l2)*Math.tan(th/2)):0}
+  if(r2>.01)c.arcTo(a[0],a[1],nm2[0],nm2[1],r2);else{c.lineTo(a[0],a[1]);c.lineTo(nm2[0],nm2[1])}}}
 async function render(ppm,num){
  var W=V('w'),H=V('h'),S=V('shape'),bw=V('bw'),m=Math.min(W,H),cv=document.createElement('canvas');
  cv.width=Math.max(1,Math.round(W*ppm));cv.height=Math.max(1,Math.round(H*ppm));
  var c=cv.getContext('2d');c.setTransform(ppm,0,0,ppm,0,0);
  var c1=V('c1'),c2=V('c2'),ca=V('ca'),ct=V('ct'),ins=.3;
  var g=c.createLinearGradient(0,0,W*.35,H);g.addColorStop(0,c1);g.addColorStop(1,c2);
- c.save();path(c,S,W,H,ins);c.fillStyle=g;c.fill();c.clip();
+ c.save();path(c,S,W,H,ins);c.fillStyle=V('solid')?c1:g;c.fill();c.clip();
+ if(BG){var bi=await img(BG);if(bi){var ba=bi.width/bi.height,bwd,bht;if((V('bgfit')==='cover')===(ba>W/H)){bht=H;bwd=H*ba}else{bwd=W;bht=W/ba}c.drawImage(bi,(W-bwd)/2,(H-bht)/2,bwd,bht);var dm=V('bgdim');if(dm>0){c.fillStyle='rgba(0,0,0,'+dm/100+')';c.fillRect(0,0,W,H)}}}
  var pt=V('pat');c.strokeStyle='rgba(255,255,255,.10)';c.fillStyle='rgba(255,255,255,.10)';c.lineWidth=.9;
  if(pt==='stripes'){for(var k=-H;k<W+H;k+=2.6){c.beginPath();c.moveTo(k,H);c.lineTo(k+H,0);c.stroke()}}
  else if(pt==='dots'){for(var yy=1;yy<H;yy+=2.4)for(var xx=1;xx<W;xx+=2.4){c.beginPath();c.arc(xx,yy,.5,0,7);c.fill()}}
@@ -2476,29 +2491,54 @@ async function render(ppm,num){
  c.restore();
  if(bw>0){path(c,S,W,H,ins+bw/2);c.strokeStyle=ca;c.lineWidth=bw;c.stroke();path(c,S,W,H,ins+bw+.7);c.strokeStyle=ca;c.globalAlpha=.45;c.lineWidth=.14;c.stroke();c.globalAlpha=1}
  if(V('cut')){path(c,S,W,H,.12);c.setLineDash([1,.7]);c.strokeStyle='#8a94a6';c.lineWidth=.12;c.stroke();c.setLineDash([])}
- var pad=m*.1+bw+(S==='oval'?m*.13:S==='pill'?H*.12:S==='hex'?Math.min(H*.35,W*.2)*.55:S==='badge'?m*.08:0);
+ var pad=m*.1+bw+(S==='oval'?m*.13:S==='pill'?H*.12:S==='hex'?Math.min(H*.35,W*.2)*.55:S==='badge'?m*.08:S==='free'?m*.07:0);
  var L={x:pad,y:pad,w:W-2*pad,h:H-2*pad},gap=m*.05;
- var qt=V('qr').trim();
- if(qt){try{var qi=await img(qrPng(qrLink(qt),360));if(qi){var qs=Math.min(L.h,L.w*.42),qx=L.x+L.w-qs,qy=L.y+(L.h-qs)/2;
+ var BL=V('blank'),qt=V('qr').trim();
+ if(qt&&!BL){try{var qi=await img(qrPng(qrLink(qt),360));if(qi){var qs=Math.min(L.h,L.w*.42),qx=L.x+L.w-qs,qy=L.y+(L.h-qs)/2;
   c.fillStyle='#fff';c.beginPath();rr(c,qx,qy,qs,qs,qs*.06);c.fill();c.drawImage(qi,qx,qy,qs,qs);L.w-=qs+gap}}catch(e){}}
  var lg=V('logo'),ls=lg==='spw'?q('logo').src:lg==='mine'?MY:null;
- if(ls){var li=await img(ls);if(li){var ar=li.width/li.height,lp=V('lpos'),lh,lw;
+ if(ls&&!BL){var li=await img(ls);if(li){var ar=li.width/li.height,lp=V('lpos'),lh,lw;
   if(lp==='top'){lh=Math.min(L.h*.34,L.w/ar);lw=lh*ar;c.drawImage(li,L.x+(L.w-lw)/2,L.y,lw,lh);L.y+=lh+gap/2;L.h-=lh+gap/2}
   else{lh=Math.min(L.h*.85,L.w*.4/ar);lw=lh*ar;var lx=lp==='left'?L.x:L.x+L.w-lw;c.drawImage(li,lx,L.y+(L.h-lh)/2,lw,lh);if(lp==='left')L.x+=lw+gap;L.w-=lw+gap}}}
  var T=function(s){return s.replace(/\{n\}/g,num)},fam=FONT[V('font')],fsc=V('fs')/100;
  var ln=[[T(V('t1')),1,'800',ct],[T(V('t2')),.56,'600',ca],[T(V('t3')),.44,'500',ct],[T(V('t4')),.44,'500',ct]].filter(function(l){return l[0].trim()});
- if(ln.length&&L.w>1&&L.h>1){var sw=0;ln.forEach(function(l){sw+=l[1]});var f=L.h/(sw*1.25)*fsc,tot=0;
+ if(!BL&&ln.length&&L.w>1&&L.h>1){var sw=0;ln.forEach(function(l){sw+=l[1]});var f=L.h/(sw*1.25)*fsc,tot=0;
   ln.forEach(function(l){var sz=f*l[1];c.font=l[2]+' 10px '+fam;var wd=c.measureText(l[0]).width/10;l.sz=Math.min(sz,L.w/wd);tot+=l.sz*1.25});
   var sc=tot>L.h?L.h/tot:1,y=L.y+(L.h-tot*sc)/2,al=V('al');c.textAlign=al;c.textBaseline='middle';
   ln.forEach(function(l){var sz=l.sz*sc;c.font=l[2]+' '+sz+'px '+fam;c.fillStyle=l[3];c.fillText(l[0],al==='left'?L.x:L.x+L.w/2,y+sz*.62);y+=sz*1.25})}
  return cv}
-var tok=0,tm=0;
-function draw(){clearTimeout(tm);tm=setTimeout(async function(){var t=++tok,W=V('w'),H=V('h');if(!(W>0&&H>0))return;
- var r=await render(Math.max(4,Math.min(14,640/Math.max(W,H))),V('start'));if(t!==tok)return;
- var v=q('sk-cv');v.width=r.width;v.height=r.height;v.getContext('2d').drawImage(r,0,0);
- q('sk-info').textContent='Size: '+W+' x '+H+' mm  |  300 dpi PNG: '+Math.round(W*11.811)+' x '+Math.round(H*11.811)+' px'},60)}
+var tok=0,tm=0,cl01=function(v){return Math.max(0,Math.min(1,v))};
+function draw(fast){clearTimeout(tm);tm=setTimeout(async function(){var t=++tok,W=V('w'),H=V('h');if(!(W>0&&H>0))return;
+ PPM=Math.max(4,Math.min(14,640/Math.max(W,H)));var r=await render(PPM,V('start'));if(t!==tok)return;LR=r;
+ var v=q('sk-cv'),x=v.getContext('2d');v.width=r.width;v.height=r.height;x.drawImage(r,0,0);
+ var fr=V('shape')==='free';v.style.touchAction=fr?'none':'';v.style.cursor=fr?'crosshair':'';
+ if(fr){PTS.forEach(function(a){x.beginPath();x.arc((.3+a[0]*(W-.6))*PPM,(.3+a[1]*(H-.6))*PPM,Math.max(4,PPM*.5),0,7);x.fillStyle='#fff';x.fill();x.lineWidth=2;x.strokeStyle='#1478ff';x.stroke()})}
+ q('sk-info').textContent='Size: '+W+' x '+H+' mm  |  300 dpi PNG: '+Math.round(W*11.811)+' x '+Math.round(H*11.811)+' px';mk()},fast?0:60)}
+function ev2n(e){var v=q('sk-cv'),r=v.getBoundingClientRect(),s=v.width/r.width,W=V('w'),H=V('h'),px=(e.clientX-r.left)*s,py=(e.clientY-r.top)*s;return {px:px,py:py,s:s,nx:(px/PPM-.3)/(W-.6),ny:(py/PPM-.3)/(H-.6)}}
+function pp(a){var W=V('w'),H=V('h');return [(.3+a[0]*(W-.6))*PPM,(.3+a[1]*(H-.6))*PPM]}
+function hit(e){var o=ev2n(e),best=-1,bd=1e9;PTS.forEach(function(a,i){var c=pp(a),d=Math.hypot(c[0]-o.px,c[1]-o.py);if(d<bd){bd=d;best=i}});return bd<=16*o.s?best:-1}
+var cvs=q('sk-cv');
+cvs.addEventListener('pointerdown',function(e){if(V('shape')!=='free')return;var i=hit(e),o=ev2n(e);
+ if(i<0){var bd=1e9,bi=-1;for(var k=0;k<PTS.length;k++){var A=pp(PTS[k]),B=pp(PTS[(k+1)%PTS.length]),dx=B[0]-A[0],dy=B[1]-A[1],L2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((o.px-A[0])*dx+(o.py-A[1])*dy)/L2)),d=Math.hypot(A[0]+t*dx-o.px,A[1]+t*dy-o.py);if(d<bd){bd=d;bi=k}}
+  if(bd>14*o.s)return;PTS.splice(bi+1,0,[cl01(o.nx),cl01(o.ny)]);i=bi+1}
+ DR=i;cvs.setPointerCapture(e.pointerId);e.preventDefault();draw(1)});
+cvs.addEventListener('pointermove',function(e){if(DR<0)return;var o=ev2n(e);PTS[DR]=[cl01(o.nx),cl01(o.ny)];draw(1)});
+cvs.addEventListener('pointerup',function(){DR=-1});cvs.addEventListener('pointercancel',function(){DR=-1});
+cvs.addEventListener('dblclick',function(e){if(V('shape')!=='free')return;var i=hit(e);if(i>=0&&PTS.length>3){PTS.splice(i,1);draw(1)}});
+q('sk-reset').onclick=function(){PTS=DP();q('sk-shape').value='free';draw(1)};
+function stk(x,cw,ch,s){var sw=V('ms')/100*cw,sh=sw*s.height/s.width;x.save();x.translate(MKX*cw,MKY*ch);x.rotate(V('mr')*Math.PI/180);x.shadowColor='rgba(0,0,0,.45)';x.shadowBlur=cw*.012;x.shadowOffsetY=cw*.004;x.drawImage(s,-sw/2,-sh/2,sw,sh);x.restore()}
+function mk(){if(!MK||!LR)return;var c=q('sk-mk'),cw=Math.min(900,MK.width),ch=Math.round(cw*MK.height/MK.width);c.width=cw;c.height=ch;var x=c.getContext('2d');x.drawImage(MK,0,0,cw,ch);stk(x,cw,ch,LR)}
+var md=false,mkc=q('sk-mk');function mp(e){var r=mkc.getBoundingClientRect();MKX=(e.clientX-r.left)/r.width;MKY=(e.clientY-r.top)/r.height;mk()}
+mkc.addEventListener('pointerdown',function(e){md=true;mkc.setPointerCapture(e.pointerId);e.preventDefault();mp(e)});
+mkc.addEventListener('pointermove',function(e){if(md)mp(e)});mkc.addEventListener('pointerup',function(){md=false});mkc.addEventListener('pointercancel',function(){md=false});
 form.addEventListener('input',function(e){if(e.target.id==='sk-dev')preset();else if(e.target.id==='sk-theme')theme();draw()});
-form.addEventListener('change',function(e){if(e.target.id==='sk-lf'&&e.target.files[0]){var rd=new FileReader();rd.onload=function(){MY=rd.result;q('sk-logo').value='mine';draw()};rd.readAsDataURL(e.target.files[0])}});
+form.addEventListener('change',function(e){var id=e.target.id;if(id!=='sk-lf'&&id!=='sk-bgf'&&id!=='sk-mf')return;var f=e.target.files[0];
+ if(!f){if(id==='sk-bgf')BG=null;if(id==='sk-mf'){MK=null;q('sk-mkw').style.display='none'}draw();return}
+ var rd=new FileReader();rd.onload=function(){
+  if(id==='sk-lf'){MY=rd.result;q('sk-logo').value='mine'}
+  else if(id==='sk-bgf'){BG=rd.result}
+  else{var im=new Image();im.onload=function(){MK=im;MKX=.5;MKY=.5;q('sk-mkw').style.display='block';draw(1)};im.src=rd.result;return}
+  draw()};rd.readAsDataURL(f)});
 function dl(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500)}
 function blob(cv){return new Promise(function(r){cv.toBlob(r,'image/png')})}
 var nm=function(){return 'sticker-'+V('dev').replace(/[^a-z0-9]+/gi,'-').toLowerCase()};
@@ -2516,6 +2556,8 @@ q('sk-add').onclick=async function(){var p=curPage();if(!p)return toast('Pehle P
  var cv=await render(10,V('start')),w=V('w')*MM,h=V('h')*MM,mw=+p.dataset.bw*.9;if(w>mw){h*=mw/w;w=mw}
  var y=Math.max(10,($('stage').getBoundingClientRect().top-p.getBoundingClientRect().top)/Z+60);
  snap();addEl(p.querySelector('.layer'),'img',(+p.dataset.bw-w)/2,y,{src:cv.toDataURL('image/png'),w:w,h:h});q('sk').classList.remove('on');toast('Sticker page par lag gaya - move / resize kar sakte ho')};
+q('sk-mkdl').onclick=async function(){if(!MK)return;var cw=Math.min(3000,MK.width),ch=Math.round(cw*MK.height/MK.width),c=document.createElement('canvas');c.width=cw;c.height=ch;var x=c.getContext('2d');x.drawImage(MK,0,0,cw,ch);
+ var sw=V('ms')/100*cw,sk=await render(Math.min(30,sw/V('w')),V('start'));stk(x,cw,ch,sk);dl(await blob(c),nm()+'-on-device.png')};
 function open(){q('sk').classList.add('on');draw()}
 function close(){q('sk').classList.remove('on')}
 q('t-sticker').onclick=open;q('sk-x').onclick=close;
