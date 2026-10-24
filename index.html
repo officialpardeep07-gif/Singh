@@ -351,6 +351,18 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
 #sk .pv{max-height:calc(95vh - 90px);overflow:auto}#sk-mk{touch-action:none;cursor:grab}
 @media(max-width:760px){#sk .bd{flex-direction:column}#sk .pv{position:static;width:100%;max-height:none;overflow:visible}}
 #sk fieldset>.w2{grid-column:1/-1}#sk .pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}#sk .ly{display:flex;gap:6px;align-items:center;padding:5px 8px;border:1px solid var(--ln);border-radius:8px;cursor:pointer;margin-bottom:4px}#sk .ly.on{background:rgba(42,169,255,.28);border-color:#63c4ff}#sk .ly span{flex:1}#sk .ly b{cursor:pointer;padding:0 4px}
+
+#sk .tabs{display:flex;gap:8px;padding:8px 14px 0}
+#sk .tabs button.on{background:var(--bl);color:#fff;border-color:#7fd8ff}
+#sk .bd.off{display:none}
+#so-cv{touch-action:none;max-width:100%;height:auto;background:#0e1830;border-radius:10px;border:1px solid var(--ln);filter:none;display:block;width:100%}
+#so-pg{max-width:100%;height:auto;background:#fff;border-radius:4px;filter:none;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+#so-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:240px;border:2px dashed #ffffff55;border-radius:12px;text-align:center;padding:20px;cursor:pointer;color:var(--sil)}
+#so-empty.dg{background:rgba(42,169,255,.25)}
+#so-empty b{font-size:15px}
+#so-res{font-size:13px;color:var(--sil);line-height:1.5;padding:8px 10px;border:1px solid var(--ln);border-radius:10px;background:rgba(42,169,255,.12)}
+#so-res.bad{background:rgba(255,80,80,.18)}
+#sk button:disabled{opacity:.4;cursor:default;transform:none}
 </style>
 </head>
 <body data-bg="sky">
@@ -511,7 +523,8 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
 <div id="tt"></div><div id="aoc"><span></span><button id="aox" title="Auto scan roko">&#10005;</button></div>
 <div id="sk"><div class="bx">
   <div class="hd"><b>Sticker and Label Maker</b><small>Device chuno, size / shape / look badlo</small><button id="sk-x">Close</button></div>
-  <div class="bd">
+  <div class="tabs"><button id="sk-t-own" class="on">My sticker / label (upload)</button><button id="sk-t-old">Design maker</button></div>
+  <div class="bd off" id="sk-old">
     <div class="pv"><div class="cv"><canvas id="sk-cv"></canvas></div>
       <div class="ac" id="sk-modes"><button id="sk-m-obj" class="on" title="Shapes ko click karke move / resize / rotate karo">Select / move shapes</button><button id="sk-m-pts" title="Sticker ke outline ke points edit karo">Outline points</button><button id="sk-m-opt" title="Selected shape ke points edit karo">Shape points</button></div>
       <div class="ac"><button id="sk-png" class="go">Download PNG</button><button id="sk-pdf" class="go">A4 sheet PDF</button><button id="sk-add">Add to PDF page</button></div>
@@ -520,6 +533,43 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
       <div class="tip"><b>Free shape:</b> shape mein "Free shape" chuno. Safed point ko kheencho, kisi side par click karke naya point jodo, point par double-click se hatao.</div>
       <div id="sk-mkw" style="display:none"><div class="cv" style="padding:6px"><canvas id="sk-mk"></canvas></div><div class="ac" style="margin-top:8px"><button id="sk-mkdl" class="go">Download device photo + sticker PNG</button></div><div class="tip">Sticker ko photo par kheench ke sahi jagah rakho, size aur rotate neeche se badlo.</div></div></div>
     <div class="fm" id="sk-form"></div>
+  </div>
+  <div class="bd" id="so">
+    <div class="pv">
+      <label id="so-empty"><b>&#8593; Apna sticker / label upload karo</b><span>Click karo, ya image yaha drop / paste (Ctrl+V) karo</span><input id="so-f" type="file" accept="image/*" hidden></label>
+      <div id="so-edw" style="display:none">
+        <canvas id="so-cv" width="760" height="470"></canvas>
+        <div class="ac" style="margin-top:8px"><button id="so-un" class="go" title="Pichhla kaam wapas (Ctrl+Z)">&#8630; Undo</button><button id="so-re" title="Undo wapas (Ctrl+Y)">&#8631; Redo</button></div><div class="ac" style="margin-top:6px"><button id="so-m-sel" class="on" title="Mouse se image par box kheencho: box ke bahar ka sab hat jayega, box hi sticker ban jayega">&#9986; Mouse se crop (box kheencho)</button><button id="so-m-poly" title="Mouse se click karke line banate jao (kone / U shape / kuch bhi). Pehle point par wapas click karo ya double-click / Enter se band karo. Dabake ghumaoge to freehand line banegi.">&#9998; Line se crop (kone / U / koi bhi shape)</button><button id="so-rc" title="Crop hatao, poori image wapas">Crop hatao</button><button id="so-m-st" title="Kinare kheencho to poori image us size mein bada / chhota hogi">Size badlo (stretch)</button><button id="so-m-cr" title="Kinare andar kheencho to image kategi, bahar kheencho to khali jagah judegi. Andar drag = image khisakao">Crop / trim</button><button id="so-zi" title="Zoom in (mouse wheel bhi chalta hai)">Zoom +</button><button id="so-zo" title="Zoom out">Zoom &minus;</button><button id="so-fit" title="Poori image dikhao">Fit view</button></div>
+        <label class="ck" style="flex-direction:row;align-items:center;gap:6px;font-size:12px;margin-top:6px;color:var(--sil)"><input type="checkbox" id="so-sn" checked> Seedhi line snap (upar-niche / side wali line apne aap seedhi, purane point se align) &mdash; Shift dabake = 45&deg; line</label>
+        <div class="tip" id="so-info"></div>
+      </div>
+      <div class="tip">Tip: <b>Line se crop</b> me click karke line ke point banate jao (kone, U shape, kuch bhi), pehle point par wapas click karke band karo &mdash; bahar ka hissa hat jayega. <b>Zoom:</b> mouse wheel ya Zoom +/&minus; se bada karke point lagao, Space dabake (ya right-click drag) se image khisko. Hari line = bilkul seedhi. <b>Mouse se crop</b> me image par drag karke box banao &mdash; box ke bahar ka hissa hat jayega aur box ka size mm me sticker size ban jayega. Phir kinare / kone ke safed dabbe cursor se kheencho &mdash; upar, niche, andar, bahar. Size mm mein live dikhega. Size fix hone ke baad neeche page par jitne sticker aate hain apne aap lag jayenge.</div>
+    </div>
+    <div class="fm">
+      <fieldset><legend>1. Sticker / label image</legend>
+        <label class="b w2" style="flex-direction:row;justify-content:center;color:var(--sil);cursor:pointer;padding:8px">Choose / change image<input id="so-f2" type="file" accept="image/*" hidden></label>
+        <div class="w2"><button type="button" id="so-clr" style="width:100%">Clear (blank karo)</button></div>
+      </fieldset>
+      <fieldset><legend>2. Size (mm)</legend>
+        <label>Width (mm)<input id="so-w" type="number" min="3" max="500" step="0.1"></label>
+        <label>Height (mm)<input id="so-h" type="number" min="3" max="500" step="0.1"></label>
+        <label class="ck w2"><input type="checkbox" id="so-lk" checked> Corner se kheenchne par ratio lock (side se kheenchoge to sirf ek taraf badlega)</label>
+        <label>Corner round (mm)<input id="so-rd" type="number" min="0" max="100" step="0.5" value="0"></label>
+        <label>Khali / bahar ka hissa<select id="so-bg"><option value="#ffffff">White</option><option value="none">Transparent</option></select></label>
+        <label class="ck w2"><input type="checkbox" id="so-cut"> Patli kata-line (cut guide) har sticker par</label>
+      </fieldset>
+      <fieldset><legend>3. Page par kitne aayenge</legend>
+        <label>Paper<select id="so-pp"><option value="A4">A4 (210 x 297)</option><option value="A3">A3 (297 x 420)</option><option value="A5">A5 (148 x 210)</option><option value="Letter">Letter (216 x 279)</option><option value="4x6">4 x 6 inch</option></select></label>
+        <label>Direction<select id="so-or"><option value="auto">Auto (jyada aaye wali)</option><option value="p">Portrait</option><option value="l">Landscape</option></select></label>
+        <label>Page kinara (mm)<input id="so-mg" type="number" min="0" max="50" step="0.5" value="5"></label>
+        <label>Sticker ke beech gap (mm) &mdash; cutting ke liye<input id="so-gp" type="number" min="0" max="30" step="0.5" value="3"></label>
+        <label>Pages<input id="so-pn" type="number" min="1" max="200" step="1" value="1"></label>
+        <label>Kam chahiye? (0 = poora page bharo)<input id="so-lm" type="number" min="0" max="5000" step="1" value="0"></label>
+        <div class="w2" id="so-res">Pehle sticker image upload karo.</div>
+        <div class="w2" style="text-align:center"><canvas id="so-pg" width="300" height="424"></canvas></div>
+      </fieldset>
+      <div class="ac"><button id="so-pdf" class="go">Download sheet PDF</button><button id="so-spng" class="go">Sheet PNG (page 1)</button><button id="so-png">Sticker PNG</button><button id="so-add">1 sticker PDF page par lagao</button></div>
+    </div>
   </div></div></div>
 <div id="sh"><div class="box">
   <div class="hd"><b>Share files &middot; Phone &#8644; PC</b><button id="sh-x">&#10005; Close</button></div>
@@ -2623,7 +2673,7 @@ pan.addEventListener('click',function(e){var a=e.target.closest('[data-a]'),ly=e
    else if(k==='pt'){q('sk-m-opt').click();return}}}
  else if(ly)SEL=+ly.dataset.i;else return;
  lst();sync();modes();draw(1)});
-document.addEventListener('keydown',function(e){if(!q('sk').classList.contains('on')||SEL<0||em()==='pts')return;if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;var b=OB[SEL],d=e.shiftKey?2:.5;
+document.addEventListener('keydown',function(e){if(!q('sk').classList.contains('on')||window.__skTab==='own'||SEL<0||em()==='pts')return;if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;var b=OB[SEL],d=e.shiftKey?2:.5;
  if(e.key==='Delete'||e.key==='Backspace'){OB.splice(SEL,1);SEL=-1}
  else if(e.key==='ArrowLeft')b.x-=d;else if(e.key==='ArrowRight')b.x+=d;else if(e.key==='ArrowUp')b.y-=d;else if(e.key==='ArrowDown')b.y+=d;else return;
  e.preventDefault();e.stopPropagation();lst();sync();modes();draw(1)},true);
@@ -2665,7 +2715,227 @@ function close(){q('sk').classList.remove('on')}
 q('t-sticker').onclick=open;q('sk-x').onclick=close;
 q('sk').addEventListener('mousedown',function(e){if(e.target===q('sk'))close()});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&q('sk').classList.contains('on'))close()});
-q('sk-dev').value='Mobile phone';preset();
+q('sk-dev').value='Custom';preset();['t1','t2','t3','t4'].forEach(function(k){q('sk-'+k).value=''});q('sk-blank').checked=true;q('sk-logo').value='none';
+window.__skTab='own';
+})();
+</script>
+
+<script>
+(function(){
+var q=function(i){return document.getElementById(i)};
+var cv=q('so-cv'),cx=cv.getContext('2d');
+var O={img:null,W:60,H:30,ix:0,iy:0,iw:60,ih:30,mode:'sel',poly:null},SR=null,PP=[],CP=null;
+var UN=[],RE=[],NT=0,VS=8,OX=0,OY=0,DG=null,HV=null,ZB=8,SPC=false,SNK='',GD=[];
+var PAPER={A4:[210,297],A3:[297,420],A5:[148,210],Letter:[215.9,279.4],'4x6':[101.6,152.4]};
+var HS=[[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]];
+var CUR={'-1,-1':'nwse-resize','1,1':'nwse-resize','1,-1':'nesw-resize','-1,1':'nesw-resize','0,-1':'ns-resize','0,1':'ns-resize','-1,0':'ew-resize','1,0':'ew-resize'};
+var MIN=3,MAX=500,M=72/25.4,PPM=11.811;
+var f1=function(v){return (Math.round(v*10)/10).toFixed(1)};
+function tab(t){window.__skTab=t;q('sk-old').classList.toggle('off',t!=='old');q('so').classList.toggle('off',t!=='own');
+ q('sk-t-own').classList.toggle('on',t==='own');q('sk-t-old').classList.toggle('on',t==='old');if(t==='own'){fit();draw();sheet()}}
+q('sk-t-own').onclick=function(){tab('own')};q('sk-t-old').onclick=function(){tab('old')};
+q('t-sticker').addEventListener('click',function(){tab(window.__skTab==='old'?'old':'own')});
+tab('own');
+function load(file){if(!file||!/^image\//.test(file.type))return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){
+ var a=im.width/im.height,W,H;if(a>=1){W=60;H=60/a}else{H=60;W=60*a}
+ O.img=im;O.W=W;O.H=H;O.ix=0;O.iy=0;O.iw=W;O.ih=H;SR=null;O.poly=null;PP=[];UN=[];RE=[];
+ q('so-empty').style.display='none';q('so-edw').style.display='';setMode('sel');inputs()};im.src=r.result};r.readAsDataURL(file)}
+q('so-f').onchange=function(e){load(e.target.files[0]);e.target.value=''};
+q('so-f2').onchange=function(e){load(e.target.files[0]);e.target.value=''};
+q('so-clr').onclick=function(){O.img=null;q('so-empty').style.display='';q('so-edw').style.display='none';sheet()};
+var em=q('so-empty');
+em.addEventListener('dragover',function(e){e.preventDefault();em.classList.add('dg')});em.addEventListener('dragleave',function(){em.classList.remove('dg')});
+em.addEventListener('drop',function(e){e.preventDefault();em.classList.remove('dg');load(e.dataTransfer.files[0])});
+cv.addEventListener('dragover',function(e){e.preventDefault()});cv.addEventListener('drop',function(e){e.preventDefault();load(e.dataTransfer.files[0])});
+document.addEventListener('paste',function(e){if(!q('sk').classList.contains('on')||window.__skTab!=='own')return;
+ var it=[].slice.call(e.clipboardData.items).filter(function(i){return i.type.indexOf('image/')===0})[0];if(it){load(it.getAsFile());e.preventDefault();e.stopPropagation()}},true);
+/* view */
+function fit(force){var cw=cv.width,ch=cv.height;
+ var sw=O.W*VS,sh=O.H*VS,bad=sw>cw*.9||sh>ch*.9||(sw<cw*.25&&sh<ch*.25);
+ if(!force&&!bad&&OX>0)return;
+ VS=Math.min(cw*.62/O.W,ch*.62/O.H);OX=(cw-O.W*VS)/2;OY=(ch-O.H*VS)/2;ZB=VS}
+q('so-fit').onclick=function(){if(O.mode==='sel'||O.mode==='poly')viewImg();else fit(true);draw()};
+function viewImg(){var cw=cv.width,ch=cv.height;VS=Math.min(cw*.86/O.iw,ch*.86/O.ih);OX=cw/2-(O.ix+O.iw/2)*VS;OY=ch/2-(O.iy+O.ih/2)*VS;ZB=VS}
+function setMode(m){O.mode=m;SR=null;PP=[];CP=null;SNK='';GD=[];['st','cr','sel','poly'].forEach(function(k){q('so-m-'+k).classList.toggle('on',m===k)});
+ if(m==='st'){if(O.poly){var iw0=O.iw,ih0=O.ih,ix0=O.ix,iy0=O.iy,W0=O.W,H0=O.H;O.poly=O.poly.map(function(a){return [(a[0]-ix0)/iw0*W0,(a[1]-iy0)/ih0*H0]})}O.ix=0;O.iy=0;O.iw=O.W;O.ih=O.H;fit(true)}else if(m==='sel'||m==='poly')viewImg();cv.style.cursor=(m==='sel'||m==='poly')?'crosshair':'default';draw();sheet()}
+q('so-m-st').onclick=function(){if(O.img&&O.mode!=='st')push();setMode('st')};q('so-m-cr').onclick=function(){setMode('cr')};q('so-m-sel').onclick=function(){setMode('sel')};q('so-m-poly').onclick=function(){setMode('poly')};
+q('so-rc').onclick=function(){if(!O.img)return;push();var sc=O.iw/O.img.width;O.iw=O.img.width*sc;O.ih=O.img.height*sc;O.W=O.iw;O.H=O.ih;O.ix=0;O.iy=0;O.poly=null;PP=[];
+ O.W=Math.max(MIN,Math.min(MAX,O.W));O.H=Math.max(MIN,Math.min(MAX,O.H));if(O.mode==='st'){O.iw=O.W;O.ih=O.H}fit(true);if(O.mode==='sel')viewImg();draw();inputs();sheet()};
+function zl(){cx.save();cx.font='12px Segoe UI,Arial,sans-serif';cx.textAlign='left';cx.textBaseline='bottom';var zt='Zoom '+Math.round(VS/ZB*100)+'%  \u00b7  scroll = zoom  \u00b7  Space / right-click drag = image khisko';cx.fillStyle='rgba(10,21,48,.85)';cx.fillRect(4,cv.height-24,cx.measureText(zt).width+10,20);cx.fillStyle='#e6ecf7';cx.fillText(zt,9,cv.height-8);cx.restore()}
+function zoomAt(px,py,f){var n=Math.max(ZB*.3,Math.min(ZB*40,VS*f));f=n/VS;OX=px-(px-OX)*f;OY=py-(py-OY)*f;VS=n;draw()}
+function snapPt(m,shift){m=clipPt(m);SNK='';GD=[];if(!PP.length)return m;
+ var l=PP[PP.length-1],dx=m[0]-l[0],dy=m[1]-l[1],th=6/VS;
+ if(shift){var an=Math.round(Math.atan2(dy,dx)/(Math.PI/4))*(Math.PI/4),d=Math.hypot(dx,dy);SNK='D';return clipPt([l[0]+d*Math.cos(an),l[1]+d*Math.sin(an)])}
+ if(!q('so-sn').checked)return m;
+ if(Math.abs(dy)<th){m[1]=l[1];SNK='H'}else if(Math.abs(dx)<th){m[0]=l[0];SNK='V'}
+ PP.forEach(function(a,i){if(i===PP.length-1)return;if(SNK!=='V'&&Math.abs(m[0]-a[0])<th){m[0]=a[0];GD.push(a)}if(SNK!=='H'&&Math.abs(m[1]-a[1])<th){m[1]=a[1];GD.push(a)}});
+ return m}
+function mmOf(p){return [(p[0]-OX)/VS,(p[1]-OY)/VS]}
+function clipPt(m){return [Math.max(O.ix,Math.min(O.ix+O.iw,m[0])),Math.max(O.iy,Math.min(O.iy+O.ih,m[1]))]}
+function spath(c,fx,fy,fw,fh,r){if(O.poly){c.beginPath();O.poly.forEach(function(a,i){var X=fx+a[0]*VS,Y=fy+a[1]*VS;if(i)c.lineTo(X,Y);else c.moveTo(X,Y)});c.closePath()}else rrect(c,fx,fy,fw,fh,r)}
+function finishPoly(){if(PP.length<3){toast('Kam se kam 3 point chahiye');return}
+ var l=1e9,t=1e9,r=-1e9,b=-1e9;PP.forEach(function(a){l=Math.min(l,a[0]);t=Math.min(t,a[1]);r=Math.max(r,a[0]);b=Math.max(b,a[1])});
+ if(r-l<MIN||b-t<MIN){toast('Shape bahut chhota hai (kam se kam 3 mm)');return}
+ push();O.poly=PP.map(function(a){return [a[0]-l,a[1]-t]});O.ix-=l;O.iy-=t;O.W=r-l;O.H=b-t;PP=[];CP=null;setMode('cr');fit(true);draw();inputs();sheet();toast('Shape crop ho gaya: '+f1(O.W)+' x '+f1(O.H)+' mm (bounding size)')}
+function cap(){return JSON.stringify({W:O.W,H:O.H,ix:O.ix,iy:O.iy,iw:O.iw,ih:O.ih,poly:O.poly,mode:(O.mode==='sel'||O.mode==='poly')?'cr':O.mode})}
+function push(){UN.push(cap());if(UN.length>80)UN.shift();RE=[]}
+function pushDeb(){if(!NT)push();clearTimeout(NT);NT=setTimeout(function(){NT=0},900)}
+function ub(){var u=q('so-un'),r=q('so-re');if(u)u.disabled=!(UN.length||(O.mode==='poly'&&PP.length));if(r)r.disabled=!RE.length}
+function restore(j){var t=JSON.parse(j),tool=O.mode==='sel'||O.mode==='poly';O.W=t.W;O.H=t.H;O.ix=t.ix;O.iy=t.iy;O.iw=t.iw;O.ih=t.ih;O.poly=t.poly;PP=[];CP=null;SR=null;
+ if(!tool){O.mode=t.mode;['st','cr','sel','poly'].forEach(function(k){q('so-m-'+k).classList.toggle('on',O.mode===k)});fit(true)}else viewImg();draw();inputs();sheet()}
+function undo(){if(!O.img)return;if(O.mode==='poly'&&PP.length){PP.pop();draw();return}if(!UN.length)return toast('Undo ke liye kuch nahi hai');RE.push(cap());restore(UN.pop());toast('Undo ho gaya')}
+function redo(){if(!O.img||!RE.length)return;UN.push(cap());restore(RE.pop());toast('Redo ho gaya')}
+q('so-un').onclick=undo;q('so-re').onclick=redo;
+document.addEventListener('keydown',function(e){if(!q('sk').classList.contains('on')||window.__skTab!=='own'||!O.img||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;var k=e.key.toLowerCase();
+ if((e.ctrlKey||e.metaKey)&&k==='z'&&!e.shiftKey)undo();else if((e.ctrlKey||e.metaKey)&&(k==='y'||(k==='z'&&e.shiftKey)))redo();else return;e.preventDefault();e.stopPropagation()},true);
+function selMM(){if(!SR)return null;var a=(Math.min(SR[0],SR[2])-OX)/VS,b=(Math.min(SR[1],SR[3])-OY)/VS,c=(Math.max(SR[0],SR[2])-OX)/VS,d=(Math.max(SR[1],SR[3])-OY)/VS;
+ a=Math.max(a,O.ix);b=Math.max(b,O.iy);c=Math.min(c,O.ix+O.iw);d=Math.min(d,O.iy+O.ih);return c>a&&d>b?{l:a,t:b,r:c,b:d}:null}
+/* draw editor */
+function rrect(c,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function draw(){ub();if(!O.img)return;var cw=cv.width,ch=cv.height,fx=OX,fy=OY,fw=O.W*VS,fh=O.H*VS,r=(+q('so-rd').value||0)*VS;
+ cx.clearRect(0,0,cw,ch);cx.fillStyle='#0e1830';cx.fillRect(0,0,cw,ch);
+ cx.lineWidth=1;for(var g=Math.ceil(-OX/VS/10)*10;OX+g*VS<cw;g+=10){cx.strokeStyle=g%50===0?'rgba(120,170,255,.22)':'rgba(120,170,255,.09)';cx.beginPath();cx.moveTo(OX+g*VS,0);cx.lineTo(OX+g*VS,ch);cx.stroke()}
+ for(var g2=Math.ceil(-OY/VS/10)*10;OY+g2*VS<ch;g2+=10){cx.strokeStyle=g2%50===0?'rgba(120,170,255,.22)':'rgba(120,170,255,.09)';cx.beginPath();cx.moveTo(0,OY+g2*VS);cx.lineTo(cw,OY+g2*VS);cx.stroke()}
+ var ix=fx+O.ix*VS,iy=fy+O.iy*VS,iw=O.iw*VS,ih=O.ih*VS;
+ if(O.mode==='poly'){cx.fillStyle='#fff';cx.fillRect(ix,iy,iw,ih);cx.drawImage(O.img,ix,iy,iw,ih);
+  var P=PP.slice();if(CP&&!(DG&&DG.free))P.push(CP);var sp=function(a){return [OX+a[0]*VS,OY+a[1]*VS]};
+  if(P.length>=3){cx.fillStyle='rgba(5,10,22,.58)';cx.beginPath();cx.rect(ix,iy,iw,ih);P.forEach(function(a,i){var c=sp(a);if(i)cx.lineTo(c[0],c[1]);else cx.moveTo(c[0],c[1])});cx.closePath();cx.fill('evenodd')}
+  if(P.length>=2){[['#0a1530',4],['#7fe0ff',2]].forEach(function(st){cx.strokeStyle=st[0];cx.lineWidth=st[1];cx.lineJoin='round';cx.beginPath();P.forEach(function(a,i){var c=sp(a);if(i)cx.lineTo(c[0],c[1]);else cx.moveTo(c[0],c[1])});if(P.length>=3){cx.setLineDash([6,5]);var f0=sp(P[0]);cx.lineTo(f0[0],f0[1])}cx.stroke();cx.setLineDash([])})}
+  if(PP.length&&CP&&!(DG&&DG.free)){var la=sp(PP[PP.length-1]),cc=sp(CP);
+   GD.forEach(function(g){var gc=sp(g);cx.save();cx.setLineDash([3,4]);cx.strokeStyle='rgba(43,227,122,.75)';cx.lineWidth=1;cx.beginPath();cx.moveTo(gc[0],gc[1]);cx.lineTo(cc[0],cc[1]);cx.stroke();cx.restore()});
+   if(SNK){cx.strokeStyle='#2be37a';cx.lineWidth=3;cx.beginPath();cx.moveTo(la[0],la[1]);cx.lineTo(cc[0],cc[1]);cx.stroke()}
+   var ddx=CP[0]-PP[PP.length-1][0],ddy=CP[1]-PP[PP.length-1][1],ang=Math.round(((Math.atan2(-ddy,ddx)*180/Math.PI)+360)%360*10)/10;
+   var tl=f1(Math.hypot(ddx,ddy))+' mm  '+ang+'\u00b0'+(SNK?'  \u2713 seedhi':'');cx.font='600 13px Segoe UI,Arial,sans-serif';cx.textAlign='left';cx.textBaseline='middle';
+   var tw2=cx.measureText(tl).width+10,tx2=Math.max(2,Math.min(cc[0]+12,cv.width-tw2-2)),ty2=Math.max(14,cc[1]-16);cx.fillStyle='#0e1830';cx.fillRect(tx2,ty2-9,tw2,18);cx.fillStyle=SNK?'#2be37a':'#7fe0ff';cx.fillText(tl,tx2+5,ty2)}
+  PP.forEach(function(a,i){var c=sp(a);cx.beginPath();cx.arc(c[0],c[1],i===0?8:4,0,7);cx.fillStyle=i===0?'#2be37a':'#fff';cx.fill();cx.lineWidth=2;cx.strokeStyle='#1478ff';cx.stroke()});
+  if(P.length){var l=1e9,t=1e9,r2=-1e9,b2=-1e9;P.forEach(function(a){l=Math.min(l,a[0]);t=Math.min(t,a[1]);r2=Math.max(r2,a[0]);b2=Math.max(b2,a[1])});
+   q('so-info').textContent='Points: '+PP.length+'  |  Shape size: '+f1(r2-l)+' x '+f1(b2-t)+' mm  |  Band karne ke liye hare pehle point par click / double-click / Enter. Backspace = pichhla point hatao, Esc = naya shuru'}
+  else q('so-info').textContent='Image par click karke line ke point banate jao (ya dabake ghumao). Kone, U shape, kuch bhi. Band karne par bahar ka hissa hat jayega.';zl();return}
+ if(O.mode==='sel'){cx.fillStyle='#fff';cx.fillRect(ix,iy,iw,ih);cx.drawImage(O.img,ix,iy,iw,ih);var m=selMM();
+  if(m){var sx=OX+m.l*VS,sy=OY+m.t*VS,sw=(m.r-m.l)*VS,sh=(m.b-m.t)*VS;cx.fillStyle='rgba(5,10,22,.62)';cx.beginPath();cx.rect(ix,iy,iw,ih);cx.rect(sx,sy,sw,sh);cx.fill('evenodd');
+   cx.setLineDash([6,4]);cx.strokeStyle='#fff';cx.lineWidth=2;cx.strokeRect(sx,sy,sw,sh);cx.setLineDash([]);cx.strokeStyle='#1478ff';cx.lineWidth=1;cx.strokeRect(sx-1,sy-1,sw+2,sh+2);
+   var t=f1(m.r-m.l)+' x '+f1(m.b-m.t)+' mm';cx.font='600 14px Segoe UI,Arial,sans-serif';cx.textAlign='left';cx.textBaseline='middle';var tw=cx.measureText(t).width+12,tx=Math.min(sx,cw-tw-2),ty=sy>26?sy-14:sy+sh+14;cx.fillStyle='#0e1830';cx.fillRect(tx,ty-10,tw,20);cx.fillStyle='#7fe0ff';cx.fillText(t,tx+6,ty);
+   q('so-info').textContent='Selection: '+t+'  (chhodo to crop ho jayega)'}
+  else q('so-info').textContent='Image par mouse se box kheencho. Box ke bahar ka hissa hat jayega.';zl();return}
+ if(O.mode==='cr'){cx.globalAlpha=.3;cx.drawImage(O.img,ix,iy,iw,ih);cx.globalAlpha=1}
+ cx.save();spath(cx,fx,fy,fw,fh,r);cx.clip();
+ if(q('so-bg').value==='none'){cx.fillStyle='#cfd6e4';cx.fillRect(fx,fy,fw,fh);cx.fillStyle='#a9b3c8';var s=10;for(var yy=0;yy<fh;yy+=s)for(var xx=((yy/s)%2)*s;xx<fw;xx+=2*s)cx.fillRect(fx+xx,fy+yy,s,s)}
+ else{cx.fillStyle='#fff';cx.fillRect(fx,fy,fw,fh)}
+ cx.drawImage(O.img,ix,iy,iw,ih);cx.restore();
+ cx.strokeStyle='#1478ff';cx.lineWidth=2;spath(cx,fx,fy,fw,fh,r);cx.stroke();if(O.poly){cx.save();cx.setLineDash([4,4]);cx.lineWidth=1;cx.strokeStyle='rgba(127,224,255,.6)';cx.strokeRect(fx,fy,fw,fh);cx.restore()}
+ /* size labels */
+ cx.font='600 14px Segoe UI,Arial,sans-serif';cx.textBaseline='middle';cx.fillStyle='#7fe0ff';cx.strokeStyle='#7fe0ff';cx.lineWidth=1;
+ var ty=Math.max(14,fy-18);cx.beginPath();cx.moveTo(fx,ty);cx.lineTo(fx+fw,ty);cx.moveTo(fx,ty-5);cx.lineTo(fx,ty+5);cx.moveTo(fx+fw,ty-5);cx.lineTo(fx+fw,ty+5);cx.stroke();
+ cx.textAlign='center';var tw=cx.measureText(f1(O.W)+' mm').width+10;cx.fillStyle='#0e1830';cx.fillRect(fx+fw/2-tw/2,ty-9,tw,18);cx.fillStyle='#7fe0ff';cx.fillText(f1(O.W)+' mm',fx+fw/2,ty);
+ var tx=Math.min(cw-14,fx+fw+18);cx.beginPath();cx.moveTo(tx,fy);cx.lineTo(tx,fy+fh);cx.moveTo(tx-5,fy);cx.lineTo(tx+5,fy);cx.moveTo(tx-5,fy+fh);cx.lineTo(tx+5,fy+fh);cx.stroke();
+ cx.save();cx.translate(tx,fy+fh/2);cx.rotate(-Math.PI/2);var th=cx.measureText(f1(O.H)+' mm').width+10;cx.fillStyle='#0e1830';cx.fillRect(-th/2,-9,th,18);cx.fillStyle='#7fe0ff';cx.fillText(f1(O.H)+' mm',0,0);cx.restore();
+ cx.fillStyle='#fff';cx.strokeStyle='#1478ff';cx.lineWidth=2;HS.forEach(function(k){var hx=fx+fw/2+k[0]*fw/2,hy=fy+fh/2+k[1]*fh/2;cx.fillRect(hx-6,hy-6,12,12);cx.strokeRect(hx-6,hy-6,12,12)});
+ q('so-info').textContent='Size: '+f1(O.W)+' x '+f1(O.H)+' mm  |  300 dpi PNG: '+Math.round(O.W*PPM)+' x '+Math.round(O.H*PPM)+' px';zl()}
+function inputs(){var w=q('so-w'),h=q('so-h');if(document.activeElement!==w)w.value=f1(O.W);if(document.activeElement!==h)h.value=f1(O.H)}
+/* pointer */
+function pt(e){var r=cv.getBoundingClientRect(),k=cv.width/r.width;return [(e.clientX-r.left)*k,(e.clientY-r.top)*k,k]}
+function hitH(p){var fw=O.W*VS,fh=O.H*VS;for(var i=0;i<8;i++){var k=HS[i],hx=OX+fw/2+k[0]*fw/2,hy=OY+fh/2+k[1]*fh/2;if(Math.abs(p[0]-hx)<=11*p[2]&&Math.abs(p[1]-hy)<=11*p[2])return k}
+ var tol=7*p[2],inX=p[0]>=OX-tol&&p[0]<=OX+fw+tol,inY=p[1]>=OY-tol&&p[1]<=OY+fh+tol;
+ if(inY&&Math.abs(p[0]-OX)<=tol)return [-1,0];if(inY&&Math.abs(p[0]-OX-fw)<=tol)return [1,0];
+ if(inX&&Math.abs(p[1]-OY)<=tol)return [0,-1];if(inX&&Math.abs(p[1]-OY-fh)<=tol)return [0,1];return null}
+cv.addEventListener('pointerdown',function(e){if(!O.img)return;var p=pt(e);
+ if(e.button===1||e.button===2||SPC){DG={k:'pan2',sx:p[0],sy:p[1],ox:OX,oy:OY};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';e.preventDefault();return}
+ if(e.button!==0)return;
+ if(O.mode==='poly'){var m=snapPt(mmOf(p),e.shiftKey);
+  if(PP.length>=3){var f=PP[0];if(Math.hypot(p[0]-(OX+f[0]*VS),p[1]-(OY+f[1]*VS))<=12*p[2]){finishPoly();e.preventDefault();return}}
+  var l=PP[PP.length-1];if(!l||Math.hypot((l[0]-m[0])*VS,(l[1]-m[1])*VS)>3*p[2])PP.push(m);
+  DG={k:'poly',sx:p[0],sy:p[1],free:false};cv.setPointerCapture(e.pointerId);e.preventDefault();draw();return}
+ if(O.mode==='sel'){SR=[p[0],p[1],p[0],p[1]];DG={k:'sel'};cv.setPointerCapture(e.pointerId);e.preventDefault();draw();return}
+ var h=hitH(p);
+ if(h){push();DG={k:'rs',poly:O.poly&&O.poly.map(function(a){return a.slice()}),hx:h[0],hy:h[1],W:O.W,H:O.H,ix:O.ix,iy:O.iy,ox:OX,oy:OY,vs:VS}}
+ else if(O.mode==='cr'&&p[0]>=OX&&p[0]<=OX+O.W*VS&&p[1]>=OY&&p[1]<=OY+O.H*VS){push();DG={k:'pan',sx:p[0],sy:p[1],ix:O.ix,iy:O.iy}}
+ else return;cv.setPointerCapture(e.pointerId);e.preventDefault()});
+cv.addEventListener('pointermove',function(e){var p=pt(e);
+ if(DG&&DG.k==='pan2'){OX=DG.ox+p[0]-DG.sx;OY=DG.oy+p[1]-DG.sy;draw();return}
+ if(O.mode==='poly'){var fr0=DG&&DG.k==='poly'&&(DG.free||Math.hypot(p[0]-DG.sx,p[1]-DG.sy)>8*p[2]),m2=fr0?clipPt(mmOf(p)):snapPt(mmOf(p),e.shiftKey);if(fr0){SNK='';GD=[]}CP=m2;
+  if(DG&&DG.k==='poly'){if(!DG.free&&Math.hypot(p[0]-DG.sx,p[1]-DG.sy)>8*p[2])DG.free=true;
+   if(DG.free){var l2=PP[PP.length-1];if(!l2||Math.hypot((l2[0]-m2[0])*VS,(l2[1]-m2[1])*VS)>3*p[2])PP.push(m2)}}
+  draw();return}
+ if(DG&&DG.k==='sel'){SR[2]=p[0];SR[3]=p[1];draw();return}
+ if(!DG){if(!O.img)return;if(O.mode==='sel'||O.mode==='poly'){cv.style.cursor='crosshair';return}var h=hitH(p);cv.style.cursor=h?CUR[h[0]+','+h[1]]:(O.mode==='cr'&&p[0]>=OX&&p[0]<=OX+O.W*VS&&p[1]>=OY&&p[1]<=OY+O.H*VS?'move':'default');return}
+ if(DG.k==='pan'){O.ix=DG.ix+(p[0]-DG.sx)/VS;O.iy=DG.iy+(p[1]-DG.sy)/VS}
+ else{var mx=(p[0]-DG.ox)/DG.vs,my=(p[1]-DG.oy)/DG.vs,L=0,R=DG.W,T=0,B=DG.H;
+  if(DG.hx===1)R=Math.max(L+MIN,Math.min(L+MAX,mx));else if(DG.hx===-1)L=Math.min(R-MIN,Math.max(R-MAX,mx));
+  if(DG.hy===1)B=Math.max(T+MIN,Math.min(T+MAX,my));else if(DG.hy===-1)T=Math.min(B-MIN,Math.max(B-MAX,my));
+  if(DG.hx&&DG.hy&&q('so-lk').checked){var sx=(R-L)/DG.W,sy=(B-T)/DG.H,sc=Math.abs(sx-1)>=Math.abs(sy-1)?sx:sy;sc=Math.max(MIN/DG.W,MIN/DG.H,Math.min(sc,MAX/DG.W,MAX/DG.H));
+   var nw=DG.W*sc,nh=DG.H*sc;if(DG.hx===1)R=L+nw;else L=R-nw;if(DG.hy===1)B=T+nh;else T=B-nh}
+  O.W=R-L;O.H=B-T;OX=DG.ox+L*DG.vs;OY=DG.oy+T*DG.vs;VS=DG.vs;
+  if(O.mode==='st'){O.ix=0;O.iy=0;O.iw=O.W;O.ih=O.H}else{O.ix=DG.ix-L;O.iy=DG.iy-T}
+  if(DG.poly)O.poly=DG.poly.map(function(a){return O.mode==='st'?[a[0]*O.W/DG.W,a[1]*O.H/DG.H]:[a[0]-L,a[1]-T]})}
+ draw();inputs();sheet()});
+function up(){if(DG&&DG.k==='pan2'){DG=null;cv.style.cursor=SPC?'grab':(O.mode==='sel'||O.mode==='poly'?'crosshair':'default');draw();return}
+ if(DG&&DG.k==='poly'){var fr=DG.free;DG=null;if(fr)finishPoly();else draw();return}
+ if(DG&&DG.k==='sel'){DG=null;var m=selMM();SR=null;
+  if(m&&m.r-m.l>=MIN&&m.b-m.t>=MIN){push();if(O.poly)O.poly=O.poly.map(function(a){return [a[0]-m.l,a[1]-m.t]});O.ix-=m.l;O.iy-=m.t;O.W=m.r-m.l;O.H=m.b-m.t;setMode('cr');fit(true);draw();inputs();sheet();toast('Crop ho gaya: '+f1(O.W)+' x '+f1(O.H)+' mm')}
+  else{draw();if(m)toast('Box bahut chhota hai (kam se kam 3 mm)')}return}
+ if(DG){if(UN.length&&cap()===UN[UN.length-1])UN.pop();DG=null;fit();draw();inputs();sheet()}}
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('contextmenu',function(e){e.preventDefault()});
+cv.addEventListener('wheel',function(e){if(!O.img)return;e.preventDefault();var p=pt(e);zoomAt(p[0],p[1],Math.exp(-e.deltaY*.0018))},{passive:false});
+q('so-zi').onclick=function(){if(O.img)zoomAt(cv.width/2,cv.height/2,1.5)};q('so-zo').onclick=function(){if(O.img)zoomAt(cv.width/2,cv.height/2,1/1.5)};
+document.addEventListener('keydown',function(e){if(e.code==='Space'&&q('sk').classList.contains('on')&&window.__skTab==='own'&&O.img&&!/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)){SPC=true;cv.style.cursor='grab';e.preventDefault()}},true);
+document.addEventListener('keyup',function(e){if(e.code==='Space'&&SPC){SPC=false;cv.style.cursor=(O.mode==='sel'||O.mode==='poly')?'crosshair':'default';e.preventDefault()}},true);
+cv.addEventListener('dblclick',function(){if(O.mode==='poly')finishPoly()});
+document.addEventListener('keydown',function(e){if(!q('sk').classList.contains('on')||window.__skTab!=='own'||O.mode!=='poly'||!PP.length)return;if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+ if(e.key==='Enter')finishPoly();else if(e.key==='Escape'){PP=[];CP=null;draw()}else if(e.key==='Backspace'){PP.pop();draw()}else return;e.preventDefault();e.stopPropagation()},true);
+/* numeric size */
+function numSize(k){var v=+q('so-'+k).value;if(!(v>=MIN&&v<=MAX))return;pushDeb();var w0=O.W,h0=O.H;
+ if(k==='w')O.W=v;else O.H=v;
+ O.W=Math.max(MIN,Math.min(MAX,O.W));O.H=Math.max(MIN,Math.min(MAX,O.H));
+ if(O.mode==='st'){O.ix=0;O.iy=0;O.iw=O.W;O.ih=O.H;if(O.poly)O.poly=O.poly.map(function(a){return [a[0]*O.W/w0,a[1]*O.H/h0]})}
+ var cw=cv.width,ch=cv.height;VS=Math.min(cw*.62/O.W,ch*.62/O.H);OX=(cw-O.W*VS)/2;OY=(ch-O.H*VS)/2;
+ if(k==='w'&&document.activeElement!==q('so-h'))q('so-h').value=f1(O.H);if(k==='h'&&document.activeElement!==q('so-w'))q('so-w').value=f1(O.W);draw();sheet()}
+q('so-w').addEventListener('input',function(){numSize('w')});q('so-h').addEventListener('input',function(){numSize('h')});
+['so-rd','so-bg','so-cut'].forEach(function(i){q(i).addEventListener('input',function(){draw();sheet()})});
+['so-pp','so-or','so-mg','so-gp','so-pn','so-lm'].forEach(function(i){q(i).addEventListener('input',sheet)});
+/* sticker render */
+function render(ppm){var W=O.W,H=O.H,c=document.createElement('canvas');c.width=Math.max(1,Math.round(W*ppm));c.height=Math.max(1,Math.round(H*ppm));
+ var x=c.getContext('2d');x.setTransform(c.width/W,0,0,c.height/H,0,0);x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+ var r=Math.max(0,+q('so-rd').value||0);x.save();if(O.poly){x.beginPath();O.poly.forEach(function(a,i){if(i)x.lineTo(a[0],a[1]);else x.moveTo(a[0],a[1])});x.closePath()}else rrect(x,0,0,W,H,r);x.clip();
+ if(q('so-bg').value!=='none'){x.fillStyle='#fff';x.fillRect(0,0,W,H)}
+ x.drawImage(O.img,O.ix,O.iy,O.iw,O.ih);x.restore();
+ if(q('so-cut').checked){x.strokeStyle='#8a94a6';x.lineWidth=.15;if(O.poly){x.beginPath();O.poly.forEach(function(a,i){if(i)x.lineTo(a[0],a[1]);else x.moveTo(a[0],a[1])});x.closePath()}else rrect(x,.08,.08,W-.16,H-.16,Math.max(0,r-.08));x.stroke()}
+ return c}
+/* layout */
+function layout(){var pp=PAPER[q('so-pp').value]||PAPER.A4,mg=Math.max(0,+q('so-mg').value||0),gp=Math.max(0,+q('so-gp').value||0),W=O.W,H=O.H,or=q('so-or').value,best=null;
+ var opts=or==='p'?[[pp[0],pp[1],'Portrait']]:or==='l'?[[pp[1],pp[0],'Landscape']]:[[pp[0],pp[1],'Portrait'],[pp[1],pp[0],'Landscape']];
+ opts.forEach(function(o){var cols=Math.floor((o[0]-2*mg+gp+1e-6)/(W+gp)),rows=Math.floor((o[1]-2*mg+gp+1e-6)/(H+gp));cols=Math.max(0,cols);rows=Math.max(0,rows);
+  var l={pw:o[0],ph:o[1],name:o[2],cols:cols,rows:rows,per:cols*rows,gp:gp,mg:mg};if(!best||l.per>best.per)best=l});
+ var pages=Math.max(1,Math.min(200,Math.round(+q('so-pn').value||1))),lim=Math.max(0,Math.round(+q('so-lm').value||0));
+ best.total=lim>0?lim:best.per*pages;best.pages=best.per>0?Math.ceil(best.total/best.per):0;return best}
+function drawSheet(c,k,st,L,count,guide){c.fillStyle='#fff';c.fillRect(0,0,L.pw*k,L.ph*k);
+ var gw=L.cols*O.W+(L.cols-1)*L.gp,gh=L.rows*O.H+(L.rows-1)*L.gp,ox=(L.pw-gw)/2,oy=(L.ph-gh)/2;c.imageSmoothingQuality='high';
+ for(var i=0;i<count;i++){var co=i%L.cols,ro=Math.floor(i/L.cols);c.drawImage(st,(ox+co*(O.W+L.gp))*k,(oy+ro*(O.H+L.gp))*k,O.W*k,O.H*k);if(guide){c.strokeStyle='rgba(20,120,255,.55)';c.lineWidth=1;c.strokeRect((ox+co*(O.W+L.gp))*k+.5,(oy+ro*(O.H+L.gp))*k+.5,O.W*k-1,O.H*k-1)}}}
+function sheet(){var res=q('so-res'),pg=q('so-pg'),pc=pg.getContext('2d');
+ if(!O.img){res.className='w2';res.id='so-res';res.textContent='Pehle sticker image upload karo.';pc.clearRect(0,0,pg.width,pg.height);return}
+ var L=layout();
+ if(L.per<1){res.classList.add('bad');res.innerHTML='Sticker ('+f1(O.W)+' x '+f1(O.H)+' mm) is page par fit nahi hota. Size chhota karo, kinara / gap kam karo ya bada paper chuno.';pc.clearRect(0,0,pg.width,pg.height);return}
+ res.classList.remove('bad');
+ res.innerHTML='<b>1 page par '+L.per+' sticker</b> ('+L.cols+' x '+L.rows+')<br>Sticker '+f1(O.W)+' x '+f1(O.H)+' mm &middot; '+L.name+' '+f1(L.pw)+' x '+f1(L.ph)+' mm<br>Gap: '+f1(L.gp)+' mm'+(L.gp<=0?' <b>(gap 0 hai &mdash; cutting me dikkat hogi, gap badhao)</b>':' (cutting ke liye)')+'<br>Total: '+L.total+' sticker, '+L.pages+' page';
+ var k=300/L.pw;pg.width=300;pg.height=Math.round(L.ph*k);var st=render(Math.max(2,k*2));drawSheet(pc,k,st,L,Math.min(L.per,L.total),1)}
+/* downloads */
+function dl(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500)}
+function blob(c){return new Promise(function(r){c.toBlob(r,'image/png')})}
+var need=function(){if(!O.img){toast('Pehle sticker image upload karo');return 0}return 1};
+function nm(){return 'my-sticker-'+f1(O.W)+'x'+f1(O.H)+'mm'}
+q('so-png').onclick=async function(){if(!need())return;dl(await blob(render(PPM)),nm()+'.png')};
+q('so-spng').onclick=async function(){if(!need())return;var L=layout();if(L.per<1)return toast('Sticker page par fit nahi hota');
+ var c=document.createElement('canvas');c.width=Math.round(L.pw*PPM);c.height=Math.round(L.ph*PPM);drawSheet(c.getContext('2d'),PPM,render(PPM),L,Math.min(L.per,L.total));dl(await blob(c),nm()+'-sheet.png');toast('Sheet PNG ready: '+Math.min(L.per,L.total)+' sticker')};
+q('so-pdf').onclick=async function(){if(!need())return;var L=layout();if(L.per<1)return toast('Sticker page par fit nahi hota');
+ toast('Sheet ban rahi hai...');var pdf=await PDFLib.PDFDocument.create(),em=await pdf.embedPng(await (await blob(render(PPM))).arrayBuffer()),
+ gw=L.cols*O.W+(L.cols-1)*L.gp,gh=L.rows*O.H+(L.rows-1)*L.gp,ox=(L.pw-gw)/2,oy=(L.ph-gh)/2,pg;
+ for(var i=0;i<L.total;i++){if(i%L.per===0)pg=pdf.addPage([L.pw*M,L.ph*M]);var ix=i%L.per,co=ix%L.cols,ro=Math.floor(ix/L.cols);
+  pg.drawImage(em,{x:(ox+co*(O.W+L.gp))*M,y:(L.ph-oy-(ro+1)*O.H-ro*L.gp)*M,width:O.W*M,height:O.H*M})}
+ dl(new Blob([await pdf.save()],{type:'application/pdf'}),nm()+'-sheet.pdf');toast(L.total+' sticker, '+L.pages+' page ('+L.per+' per page)')};
+q('so-add').onclick=function(){if(!need())return;var p=curPage();if(!p)return toast('Pehle PDF kholo ya blank page jodo');
+ var c=render(10),w=O.W*MM,h=O.H*MM,mw=+p.dataset.bw*.9;if(w>mw){h*=mw/w;w=mw}
+ var y=Math.max(10,($('stage').getBoundingClientRect().top-p.getBoundingClientRect().top)/Z+60);
+ snap();addEl(p.querySelector('.layer'),'img',(+p.dataset.bw-w)/2,y,{src:c.toDataURL('image/png'),w:w,h:h});q('sk').classList.remove('on');toast('Sticker page par lag gaya - move / resize kar sakte ho')};
 })();
 </script>
 </body>
