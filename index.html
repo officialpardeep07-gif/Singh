@@ -363,6 +363,11 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
 #so-res{font-size:13px;color:var(--sil);line-height:1.5;padding:8px 10px;border:1px solid var(--ln);border-radius:10px;background:rgba(42,169,255,.12)}
 #so-res.bad{background:rgba(255,80,80,.18)}
 #sk button:disabled{opacity:.4;cursor:default;transform:none}
+#sk button.rn.on{background:var(--bl);color:#fff;border-color:#7fd8ff}
+#so-ruc{margin-top:6px;padding:8px;border:1px solid var(--ln);border-radius:10px;background:rgba(255,226,140,.08)}
+#so-ruc .ac{margin-top:6px;align-items:center}
+#so-ruc label.rl{flex-direction:row;align-items:center;gap:6px;color:var(--sil);font-size:12px}
+#so-ruc input[type=number]{width:90px!important}
 </style>
 </head>
 <body data-bg="sky">
@@ -540,6 +545,13 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
       <div id="so-edw" style="display:none">
         <canvas id="so-cv" width="760" height="470"></canvas>
         <div class="ac" style="margin-top:8px"><button id="so-un" class="go" title="Pichhla kaam wapas (Ctrl+Z)">&#8630; Undo</button><button id="so-re" title="Undo wapas (Ctrl+Y)">&#8631; Redo</button></div><div class="ac" style="margin-top:6px"><button id="so-m-sel" class="on" title="Mouse se image par box kheencho: box ke bahar ka sab hat jayega, box hi sticker ban jayega">&#9986; Mouse se crop (box kheencho)</button><button id="so-m-poly" title="Mouse se click karke line banate jao (kone / U shape / kuch bhi). Pehle point par wapas click karo ya double-click / Enter se band karo. Dabake ghumaoge to freehand line banegi.">&#9998; Line se crop (kone / U / koi bhi shape)</button><button id="so-rc" title="Crop hatao, poori image wapas">Crop hatao</button><button id="so-m-st" title="Kinare kheencho to poori image us size mein bada / chhota hogi">Size badlo (stretch)</button><button id="so-m-cr" title="Kinare andar kheencho to image kategi, bahar kheencho to khali jagah judegi. Andar drag = image khisakao">Crop / trim</button><button id="so-zi" title="Zoom in (mouse wheel bhi chalta hai)">Zoom +</button><button id="so-zo" title="Zoom out">Zoom &minus;</button><button id="so-fit" title="Poori image dikhao">Fit view</button></div>
+        <div class="ac" style="margin-top:6px"><button id="so-ru" class="rn" title="Market jaisi scale (ruler): 1 mm se 30 cm tak. Kheench ke kahin bhi rakho, end ka hara gola kheench ke lambai badlo">&#128207; Scale (1 mm &ndash; 30 cm)</button><button id="so-ruedge" class="rn" title="Canvas ke upar aur left kinare par mm / cm ki ruler (sticker ke kone se 0)">Kinare ki ruler</button></div>
+        <div id="so-ruc" style="display:none">
+          <div class="ac" style="margin-top:0"><label class="rl">Scale lambai (mm)<input id="so-rul" type="number" min="1" max="300" step="0.5" value="50"></label><span id="so-rur" style="font-size:12px;color:#ffe28c"></span></div>
+          <div class="ac"><button id="so-ru1" title="Scale ko seedha (0&deg;) karo">&#8596; Seedha</button><button id="so-ru90" title="Scale ko khada (90&deg;) karo">&#8597; Khada</button><button id="so-ru300" title="Poori 30 cm ki scale dikhao (zoom out hoga)">30 cm</button><button id="so-ru0" title="Scale ko sticker ke upar-left kone par rakho">Sticker ke kone par</button></div>
+          <div class="ac"><button id="so-ruw" class="go" title="Sticker ki width = scale ki lambai">Width = scale</button><button id="so-ruh" class="go" title="Sticker ki height = scale ki lambai">Height = scale</button></div>
+          <div class="tip">Scale ko mouse se kheench ke sticker ke upar rakho (sticker ke kinare ke paas aane par apne aap chipkegi). <b>Hara gola</b> kheench ke lambai / angle badlo (seedhi line par apne aap lock, Shift = sirf lambai, Alt = free). Jitni lambai chahiye utni karke <b>Width = scale</b> ya <b>Height = scale</b> dabao &mdash; sticker usi size ka ho jayega (&ldquo;ratio lock&rdquo; on ho to dusri side apne aap). Mouse wheel se zoom karoge to ticks 1 mm tak khulte jayenge.</div>
+        </div>
         <label class="ck" style="flex-direction:row;align-items:center;gap:6px;font-size:12px;margin-top:6px;color:var(--sil)"><input type="checkbox" id="so-sn" checked> Seedhi line snap (upar-niche / side wali line apne aap seedhi, purane point se align) &mdash; Shift dabake = 45&deg; line</label>
         <div class="tip" id="so-info"></div>
       </div>
@@ -2731,6 +2743,7 @@ var HS=[[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]];
 var CUR={'-1,-1':'nwse-resize','1,1':'nwse-resize','1,-1':'nesw-resize','-1,1':'nesw-resize','0,-1':'ns-resize','0,1':'ns-resize','-1,0':'ew-resize','1,0':'ew-resize'};
 var MIN=3,MAX=500,M=72/25.4,PPM=11.811;
 var f1=function(v){return (Math.round(v*10)/10).toFixed(1)};
+var RU={on:0,edge:0,x:0,y:0,a:0,len:50},RD=null,RT=32;
 function tab(t){window.__skTab=t;q('sk-old').classList.toggle('off',t!=='old');q('so').classList.toggle('off',t!=='own');
  q('sk-t-own').classList.toggle('on',t==='own');q('sk-t-old').classList.toggle('on',t==='old');if(t==='own'){fit();draw();sheet()}}
 q('sk-t-own').onclick=function(){tab('own')};q('sk-t-old').onclick=function(){tab('old')};
@@ -2761,7 +2774,7 @@ function setMode(m){O.mode=m;SR=null;PP=[];CP=null;SNK='';GD=[];['st','cr','sel'
 q('so-m-st').onclick=function(){if(O.img&&O.mode!=='st')push();setMode('st')};q('so-m-cr').onclick=function(){setMode('cr')};q('so-m-sel').onclick=function(){setMode('sel')};q('so-m-poly').onclick=function(){setMode('poly')};
 q('so-rc').onclick=function(){if(!O.img)return;push();var sc=O.iw/O.img.width;O.iw=O.img.width*sc;O.ih=O.img.height*sc;O.W=O.iw;O.H=O.ih;O.ix=0;O.iy=0;O.poly=null;PP=[];
  O.W=Math.max(MIN,Math.min(MAX,O.W));O.H=Math.max(MIN,Math.min(MAX,O.H));if(O.mode==='st'){O.iw=O.W;O.ih=O.H}fit(true);if(O.mode==='sel')viewImg();draw();inputs();sheet()};
-function zl(){cx.save();cx.font='12px Segoe UI,Arial,sans-serif';cx.textAlign='left';cx.textBaseline='bottom';var zt='Zoom '+Math.round(VS/ZB*100)+'%  \u00b7  scroll = zoom  \u00b7  Space / right-click drag = image khisko';cx.fillStyle='rgba(10,21,48,.85)';cx.fillRect(4,cv.height-24,cx.measureText(zt).width+10,20);cx.fillStyle='#e6ecf7';cx.fillText(zt,9,cv.height-8);cx.restore()}
+function zl(){drawRuler();cx.save();cx.font='12px Segoe UI,Arial,sans-serif';cx.textAlign='left';cx.textBaseline='bottom';var zt='Zoom '+Math.round(VS/ZB*100)+'%  \u00b7  scroll = zoom  \u00b7  Space / right-click drag = image khisko';cx.fillStyle='rgba(10,21,48,.85)';cx.fillRect(4,cv.height-24,cx.measureText(zt).width+10,20);cx.fillStyle='#e6ecf7';cx.fillText(zt,9,cv.height-8);cx.restore()}
 function zoomAt(px,py,f){var n=Math.max(ZB*.3,Math.min(ZB*40,VS*f));f=n/VS;OX=px-(px-OX)*f;OY=py-(py-OY)*f;VS=n;draw()}
 function snapPt(m,shift){m=clipPt(m);SNK='';GD=[];if(!PP.length)return m;
  var l=PP[PP.length-1],dx=m[0]-l[0],dy=m[1]-l[1],th=6/VS;
@@ -2832,6 +2845,68 @@ function draw(){ub();if(!O.img)return;var cw=cv.width,ch=cv.height,fx=OX,fy=OY,f
  cx.fillStyle='#fff';cx.strokeStyle='#1478ff';cx.lineWidth=2;HS.forEach(function(k){var hx=fx+fw/2+k[0]*fw/2,hy=fy+fh/2+k[1]*fh/2;cx.fillRect(hx-6,hy-6,12,12);cx.strokeRect(hx-6,hy-6,12,12)});
  q('so-info').textContent='Size: '+f1(O.W)+' x '+f1(O.H)+' mm  |  300 dpi PNG: '+Math.round(O.W*PPM)+' x '+Math.round(O.H*PPM)+' px';zl()}
 function inputs(){var w=q('so-w'),h=q('so-h');if(document.activeElement!==w)w.value=f1(O.W);if(document.activeElement!==h)h.value=f1(O.H)}
+/* ===== market-style scale: 1 mm - 30 cm ===== */
+function ruG(){var a=RU.a*Math.PI/180,ux=Math.cos(a),uy=Math.sin(a),sx=OX+RU.x*VS,sy=OY+RU.y*VS,L=RU.len*VS;return {ux:ux,uy:uy,vx:-uy,vy:ux,sx:sx,sy:sy,L:L,ex:sx+ux*L,ey:sy+uy*L,a:a}}
+function labMM(){var c=[5,10,20,50,100,200,500];for(var i=0;i<c.length;i++)if(c[i]*VS>=30)return c[i];return 500}
+function cmTxt(mm){var v=mm/10;return Math.abs(v-Math.round(v))<1e-6?String(Math.round(v)):v.toFixed(1)}
+function ticksLoop(a,b,half,fn){var st=half?.5:(VS>=2.2?1:(VS*5>=5?5:10)),i=Math.ceil(a/st-1e-9);for(var n=i;n*st<=b+1e-9;n++){var mm=n*st,r=Math.round(mm*1000)/1000,t;
+ if(Math.abs(r%10)<1e-6)t=2;else if(Math.abs(r%5)<1e-6)t=1;else if(Math.abs(r-Math.round(r))<1e-6)t=0;else t=-1;fn(r,t)}}
+function drawEdge(){var cw=cv.width,ch=cv.height,S=20,lm=labMM();cx.save();cx.fillStyle='rgba(10,21,48,.92)';cx.fillRect(0,0,cw,S);cx.fillRect(0,0,S,ch);
+ cx.strokeStyle='#9fc4ff';cx.fillStyle='#cfe3ff';cx.lineWidth=1;cx.font='600 10px Segoe UI,Arial,sans-serif';cx.textBaseline='top';cx.textAlign='left';
+ var LN=[4,8,13];
+ ticksLoop((S-OX)/VS,(cw-OX)/VS,0,function(mm,t){var x=Math.round(OX+mm*VS)+.5;if(x<S+1)return;cx.beginPath();cx.moveTo(x,S);cx.lineTo(x,S-LN[t]);cx.stroke();if(t>=1&&Math.abs(mm%lm)<1e-6)cx.fillText(cmTxt(mm),x+2,1)});
+ ticksLoop((S-OY)/VS,(ch-OY)/VS,0,function(mm,t){var y=Math.round(OY+mm*VS)+.5;if(y<S+1)return;cx.beginPath();cx.moveTo(S,y);cx.lineTo(S-LN[t],y);cx.stroke();if(t>=1&&Math.abs(mm%lm)<1e-6){cx.save();cx.translate(10,y+2);cx.rotate(-Math.PI/2);cx.textAlign='right';cx.fillText(cmTxt(mm),0,-9);cx.restore()}});
+ cx.fillStyle='#7fe0ff';cx.fillText('cm',3,3);cx.restore()}
+function drawRuler(){if(!O.img)return;if(RU.edge)drawEdge();
+ var rr=q('so-rur');if(!RU.on){return}
+ var g=ruG(),L=g.L,lm=labMM(),half=VS>=12;
+ cx.save();cx.translate(g.sx,g.sy);cx.rotate(g.a);
+ cx.shadowColor='rgba(0,0,0,.45)';cx.shadowBlur=8;cx.shadowOffsetY=3;cx.fillStyle='rgba(255,226,140,.94)';cx.fillRect(0,0,L,RT);cx.shadowColor='transparent';
+ cx.strokeStyle='#6b5a14';cx.lineWidth=1;cx.strokeRect(.5,.5,L,RT);
+ cx.strokeStyle='#1a1a1a';cx.fillStyle='#1a1a1a';cx.lineWidth=1;cx.font='600 10px Segoe UI,Arial,sans-serif';cx.textBaseline='top';cx.textAlign='center';
+ var LN=[6,10,16],HL=3;
+ ticksLoop(0,RU.len,half,function(mm,t){var x=Math.round(mm*VS)+.5,l=t<0?HL:LN[t];cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,l);cx.stroke();
+  if(t>=1&&Math.abs(mm%lm)<1e-6){var tx=Math.min(Math.max(x,8),L-8);cx.fillText(cmTxt(mm),tx,l+2)}});
+ var xe=Math.round(L)+.5;cx.beginPath();cx.moveTo(xe,0);cx.lineTo(xe,LN[2]);cx.stroke();
+ cx.textAlign='left';cx.fillStyle='#6b5a14';cx.fillText('cm',L>60?4:2,RT-12);
+ cx.beginPath();cx.arc(L,RT/2,9,0,7);cx.fillStyle='#2be37a';cx.fill();cx.lineWidth=2;cx.strokeStyle='#0a3d1e';cx.stroke();
+ cx.restore();
+ var an=((RU.a%360)+360)%360,odd=Math.abs(an%90)>.05&&Math.abs(an%90-90)>.05,t=f1(RU.len)+' mm = '+f1(RU.len/10)+' cm'+(odd?'   \u2220 '+f1(an)+'\u00b0':'');
+ cx.save();cx.font='600 13px Segoe UI,Arial,sans-serif';cx.textAlign='left';cx.textBaseline='middle';var tw=cx.measureText(t).width+12,tx=Math.max(2,Math.min(g.ex+14,cv.width-tw-2)),ty=Math.max(12,Math.min(g.ey-22,cv.height-14));
+ cx.fillStyle='#0e1830';cx.fillRect(tx,ty-10,tw,20);cx.strokeStyle='#ffe28c';cx.lineWidth=1;cx.strokeRect(tx+.5,ty-9.5,tw-1,19);cx.fillStyle='#ffe28c';cx.fillText(t,tx+6,ty);cx.restore();
+ if(rr)rr.textContent='= '+f1(RU.len/10)+' cm'}
+function ruHit(p){if(!RU.on)return null;var g=ruG(),k=p[2],dx=p[0]-g.sx,dy=p[1]-g.sy,lu=dx*g.ux+dy*g.uy,lv=dx*g.vx+dy*g.vy;
+ if(Math.hypot(lu-g.L,lv-RT/2)<=14*k)return 'end';
+ if(lu>=-3*k&&lu<=g.L+3*k&&lv>=-3*k&&lv<=RT+3*k)return 'body';return null}
+function ruDown(e,p){var h=ruHit(p);if(!h)return false;RD={k:h,sx:p[0],sy:p[1],x:RU.x,y:RU.y};cv.setPointerCapture(e.pointerId);e.preventDefault();return true}
+function ruLen(v){RU.len=Math.max(1,Math.min(300,v));var i=q('so-rul');if(document.activeElement!==i)i.value=f1(RU.len)}
+function ruMove(e,p){
+ if(!RD){var h=ruHit(p);if(h){cv.style.cursor=h==='end'?'crosshair':'move';return true}return false}
+ if(RD.k==='body'){var x=RD.x+(p[0]-RD.sx)/VS,y=RD.y+(p[1]-RD.sy)/VS,th=6/VS;
+  if(!e.altKey){if(Math.abs(x)<th)x=0;else if(Math.abs(x-O.W)<th)x=O.W;if(Math.abs(y)<th)y=0;else if(Math.abs(y-O.H)<th)y=O.H}
+  RU.x=x;RU.y=y;draw();return true}
+ var g=ruG(),dx=p[0]-g.sx,dy=p[1]-g.sy,len,ang=RU.a;
+ if(e.shiftKey){len=(dx*g.ux+dy*g.uy)/VS}
+ else{len=Math.hypot(dx,dy)/VS;ang=Math.atan2(dy,dx)*180/Math.PI;if(!e.altKey){var n=Math.round(ang/90)*90;if(Math.abs(ang-n)<4)ang=n}}
+ var st=VS>=10?.5:1;len=Math.round(len/st)*st;
+ RU.a=ang;ruLen(len);draw();return true}
+function ruPlace(){var cw=cv.width,ch=cv.height;RU.a=0;
+ var fit=Math.floor((cw*.88/VS)/10)*10;RU.len=Math.max(10,Math.min(300,fit));
+ var below=OY+(O.H+4)*VS+RT+4<ch;RU.x=0;RU.y=below?O.H+4:Math.max(0,O.H/2);ruLen(RU.len)}
+q('so-ru').onclick=function(){RU.on=RU.on?0:1;q('so-ru').classList.toggle('on',!!RU.on);q('so-ruc').style.display=RU.on?'':'none';if(RU.on&&O.img)ruPlace();draw()};
+q('so-ruedge').onclick=function(){RU.edge=RU.edge?0:1;q('so-ruedge').classList.toggle('on',!!RU.edge);draw()};
+q('so-rul').addEventListener('input',function(){var v=+q('so-rul').value;if(v>=1&&v<=300){RU.len=v;draw()}});
+q('so-ru1').onclick=function(){RU.a=0;draw()};q('so-ru90').onclick=function(){RU.a=90;draw()};
+q('so-ru0').onclick=function(){RU.x=0;RU.y=0;draw()};
+q('so-ru300').onclick=function(){if(!O.img)return;ruLen(300);var cw=cv.width,ch=cv.height,need=cw*.94/300;if(VS>need)zoomAt(cw/2,ch/2,need/VS);
+ var cl=Math.abs(Math.cos(RU.a*Math.PI/180))>.5;if(cl){RU.x=Math.max(-OX/VS+2/VS,(cw*.03-OX)/VS)}draw()};
+function ruSet(k){if(!O.img)return;var v=RU.len;if(!(v>=MIN&&v<=MAX))return toast('Sticker size kam se kam '+MIN+' mm aur zyada se zyada '+MAX+' mm ho sakta hai');
+ var lock=q('so-lk').checked,r=O.W/O.H,w=O.W,h=O.H;if(k==='w'){w=v;if(lock)h=v/r}else{h=v;if(lock)w=v*r}
+ w=Math.round(w*100)/100;h=Math.round(h*100)/100;if(w<MIN||h<MIN||w>MAX||h>MAX)return toast('Ratio lock ke saath dusri side limit ('+MIN+'-'+MAX+' mm) se bahar ja rahi hai');
+ if(O.mode!=='st'){push();setMode('st')}
+ q('so-w').value=w;numSize('w');q('so-h').value=h;numSize('h');
+ var ox=RU.x,oy=RU.y;draw();toast('Sticker size ab '+f1(O.W)+' x '+f1(O.H)+' mm')}
+q('so-ruw').onclick=function(){ruSet('w')};q('so-ruh').onclick=function(){ruSet('h')};
 /* pointer */
 function pt(e){var r=cv.getBoundingClientRect(),k=cv.width/r.width;return [(e.clientX-r.left)*k,(e.clientY-r.top)*k,k]}
 function hitH(p){var fw=O.W*VS,fh=O.H*VS;for(var i=0;i<8;i++){var k=HS[i],hx=OX+fw/2+k[0]*fw/2,hy=OY+fh/2+k[1]*fh/2;if(Math.abs(p[0]-hx)<=11*p[2]&&Math.abs(p[1]-hy)<=11*p[2])return k}
@@ -2839,6 +2914,7 @@ function hitH(p){var fw=O.W*VS,fh=O.H*VS;for(var i=0;i<8;i++){var k=HS[i],hx=OX+
  if(inY&&Math.abs(p[0]-OX)<=tol)return [-1,0];if(inY&&Math.abs(p[0]-OX-fw)<=tol)return [1,0];
  if(inX&&Math.abs(p[1]-OY)<=tol)return [0,-1];if(inX&&Math.abs(p[1]-OY-fh)<=tol)return [0,1];return null}
 cv.addEventListener('pointerdown',function(e){if(!O.img)return;var p=pt(e);
+ if(e.button===0&&!SPC&&ruDown(e,p))return;
  if(e.button===1||e.button===2||SPC){DG={k:'pan2',sx:p[0],sy:p[1],ox:OX,oy:OY};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';e.preventDefault();return}
  if(e.button!==0)return;
  if(O.mode==='poly'){var m=snapPt(mmOf(p),e.shiftKey);
@@ -2851,6 +2927,7 @@ cv.addEventListener('pointerdown',function(e){if(!O.img)return;var p=pt(e);
  else if(O.mode==='cr'&&p[0]>=OX&&p[0]<=OX+O.W*VS&&p[1]>=OY&&p[1]<=OY+O.H*VS){push();DG={k:'pan',sx:p[0],sy:p[1],ix:O.ix,iy:O.iy}}
  else return;cv.setPointerCapture(e.pointerId);e.preventDefault()});
 cv.addEventListener('pointermove',function(e){var p=pt(e);
+ if(ruMove(e,p))return;
  if(DG&&DG.k==='pan2'){OX=DG.ox+p[0]-DG.sx;OY=DG.oy+p[1]-DG.sy;draw();return}
  if(O.mode==='poly'){var fr0=DG&&DG.k==='poly'&&(DG.free||Math.hypot(p[0]-DG.sx,p[1]-DG.sy)>8*p[2]),m2=fr0?clipPt(mmOf(p)):snapPt(mmOf(p),e.shiftKey);if(fr0){SNK='';GD=[]}CP=m2;
   if(DG&&DG.k==='poly'){if(!DG.free&&Math.hypot(p[0]-DG.sx,p[1]-DG.sy)>8*p[2])DG.free=true;
@@ -2868,7 +2945,8 @@ cv.addEventListener('pointermove',function(e){var p=pt(e);
   if(O.mode==='st'){O.ix=0;O.iy=0;O.iw=O.W;O.ih=O.H}else{O.ix=DG.ix-L;O.iy=DG.iy-T}
   if(DG.poly)O.poly=DG.poly.map(function(a){return O.mode==='st'?[a[0]*O.W/DG.W,a[1]*O.H/DG.H]:[a[0]-L,a[1]-T]})}
  draw();inputs();sheet()});
-function up(){if(DG&&DG.k==='pan2'){DG=null;cv.style.cursor=SPC?'grab':(O.mode==='sel'||O.mode==='poly'?'crosshair':'default');draw();return}
+function up(){if(RD){RD=null;draw();return}
+if(DG&&DG.k==='pan2'){DG=null;cv.style.cursor=SPC?'grab':(O.mode==='sel'||O.mode==='poly'?'crosshair':'default');draw();return}
  if(DG&&DG.k==='poly'){var fr=DG.free;DG=null;if(fr)finishPoly();else draw();return}
  if(DG&&DG.k==='sel'){DG=null;var m=selMM();SR=null;
   if(m&&m.r-m.l>=MIN&&m.b-m.t>=MIN){push();if(O.poly)O.poly=O.poly.map(function(a){return [a[0]-m.l,a[1]-m.t]});O.ix-=m.l;O.iy-=m.t;O.W=m.r-m.l;O.H=m.b-m.t;setMode('cr');fit(true);draw();inputs();sheet();toast('Crop ho gaya: '+f1(O.W)+' x '+f1(O.H)+' mm')}
