@@ -528,7 +528,7 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
 <div id="tt"></div><div id="aoc"><span></span><button id="aox" title="Auto scan roko">&#10005;</button></div>
 <div id="sk"><div class="bx">
   <div class="hd"><b>Sticker and Label Maker</b><small>Device chuno, size / shape / look badlo</small><button id="sk-x">Close</button></div>
-  <div class="tabs"><button id="sk-t-own" class="on">My sticker / label (upload)</button><button id="sk-t-old">Design maker</button></div>
+  <div class="tabs"><button id="sk-t-own" class="on">My sticker / label (upload)</button><button id="sk-t-old">Design maker</button><button id="sk-t-bc">Barcode (apna number)</button></div>
   <div class="bd off" id="sk-old">
     <div class="pv"><div class="cv"><canvas id="sk-cv"></canvas></div>
       <div class="ac" id="sk-modes"><button id="sk-m-obj" class="on" title="Shapes ko click karke move / resize / rotate karo">Select / move shapes</button><button id="sk-m-pts" title="Sticker ke outline ke points edit karo">Outline points</button><button id="sk-m-opt" title="Selected shape ke points edit karo">Shape points</button></div>
@@ -582,7 +582,41 @@ body[data-bg=sky] .empty img{filter:drop-shadow(0 6px 22px rgba(10,60,140,.55))}
       </fieldset>
       <div class="ac"><button id="so-pdf" class="go">Download sheet PDF</button><button id="so-spng" class="go">Sheet PNG (page 1)</button><button id="so-png">Sticker PNG</button><button id="so-add">1 sticker PDF page par lagao</button></div>
     </div>
-  </div></div></div>
+  </div>
+  <div class="bd off" id="sk-bc">
+    <div class="pv">
+      <div class="cv" style="padding:12px"><canvas id="bc-cv" width="600" height="300"></canvas></div>
+      <div class="tip" id="bc-info"></div>
+      <div class="ac"><button id="bc-png" class="go">Sticker PNG</button><button id="bc-pdf" class="go">Download sheet PDF</button><button id="bc-add">1 sticker PDF page par lagao</button></div>
+      <div class="tip">Tip: Apna koi bhi number daalo &mdash; barcode banega aur uske <b>neeche wahi number</b> likha aayega. Sheet PDF me barcode <b>vector</b> hota hai (bilkul saaf), print karte time <b>100% / Actual size</b> chuno, &ldquo;Fit to page&rdquo; nahi. Scanner ke liye bar bahut patle na ho (neeche info me dikhega).</div>
+    </div>
+    <div class="fm">
+      <fieldset><legend>1. Apna number</legend>
+        <label class="w2">Number (ya text)<input id="bc-val" type="text" value="123456789012" placeholder="jaise 123456789012" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <label class="w2">Barcode type<select id="bc-ty"><option value="128">Code 128 (koi bhi number / letter &mdash; sabse aasan)</option><option value="ean">EAN-13 (12 ya 13 digit, shop wala)</option></select></label>
+        <label class="ck w2"><input type="checkbox" id="bc-tx" checked> Barcode ke neeche number bhi likho</label>
+        <label class="ck w2"><input type="checkbox" id="bc-inc"> Series: har sticker par number +1 badhta jaye (aakhri digits)</label>
+      </fieldset>
+      <fieldset><legend>2. Sticker size (mm)</legend>
+        <label>Width (mm)<input id="bc-w" type="number" min="10" max="500" step="0.5" value="50"></label>
+        <label>Height (mm)<input id="bc-h" type="number" min="8" max="500" step="0.5" value="25"></label>
+        <label>Number ka size (mm)<input id="bc-ts" type="number" min="1.5" max="20" step="0.1" value="3.5"></label>
+        <label>Barcode ka color<input id="bc-col" type="color" value="#000000"></label>
+        <label class="ck w2"><input type="checkbox" id="bc-cut"> Patli kata-line (cut guide) har sticker par</label>
+      </fieldset>
+      <fieldset><legend>3. Page par kitne aayenge</legend>
+        <label>Paper<select id="bc-pp"><option value="A4">A4 (210 x 297)</option><option value="A3">A3 (297 x 420)</option><option value="A5">A5 (148 x 210)</option><option value="Letter">Letter (216 x 279)</option><option value="4x6">4 x 6 inch</option></select></label>
+        <label>Direction<select id="bc-or"><option value="auto">Auto (jyada aaye wali)</option><option value="p">Portrait</option><option value="l">Landscape</option></select></label>
+        <label>Page kinara (mm)<input id="bc-mg" type="number" min="0" max="50" step="0.5" value="5"></label>
+        <label>Sticker ke beech gap (mm)<input id="bc-gp" type="number" min="0" max="30" step="0.5" value="3"></label>
+        <label>Pages<input id="bc-pn" type="number" min="1" max="200" step="1" value="1"></label>
+        <label>Kam chahiye? (0 = poora page bharo)<input id="bc-lm" type="number" min="0" max="5000" step="1" value="0"></label>
+        <div class="w2" id="bc-res" style="font-size:13px;color:var(--sil);line-height:1.5;padding:8px 10px;border:1px solid var(--ln);border-radius:10px;background:rgba(42,169,255,.12)"></div>
+        <div class="w2" style="text-align:center"><canvas id="bc-pg" width="300" height="424" style="background:#fff;border-radius:4px;box-shadow:0 6px 18px rgba(0,0,0,.5)"></canvas></div>
+      </fieldset>
+    </div>
+  </div>
+</div></div>
 <div id="sh"><div class="box">
   <div class="hd"><b>Share files &middot; Phone &#8644; PC</b><button id="sh-x">&#10005; Close</button></div>
   <div id="sh-st"><i id="sh-dot"></i><span id="sh-stt">Connected nahi hai</span></div>
@@ -3014,6 +3048,124 @@ q('so-add').onclick=function(){if(!need())return;var p=curPage();if(!p)return to
  var c=render(10),w=O.W*MM,h=O.H*MM,mw=+p.dataset.bw*.9;if(w>mw){h*=mw/w;w=mw}
  var y=Math.max(10,($('stage').getBoundingClientRect().top-p.getBoundingClientRect().top)/Z+60);
  snap();addEl(p.querySelector('.layer'),'img',(+p.dataset.bw-w)/2,y,{src:c.toDataURL('image/png'),w:w,h:h});q('sk').classList.remove('on');toast('Sticker page par lag gaya - move / resize kar sakte ho')};
+})();
+</script>
+
+<script>
+(function(){
+var q=function(i){return document.getElementById(i)};
+var M=72/25.4,PAPER={A4:[210,297],A3:[297,420],A5:[148,210],Letter:[215.9,279.4],'4x6':[101.6,152.4]};
+var f1=function(v){return (Math.round(v*10)/10).toFixed(1)};
+var f2=function(v){return (Math.round(v*100)/100).toFixed(2)};
+var cl=function(v,a,b){return Math.max(a,Math.min(b,v))};
+/* ---- Code 128 ---- */
+var C128=['212222','222122','222221','121223','121322','131222','122213','122312','132212','221213','221312','231212','112232','122132','122231','113222','123122','123221','223211','221132','221231','213212','223112','312131','311222','321122','321221','312212','322112','322211','212123','212321','232121','111323','131123','131321','112313','132113','132311','211313','231113','231311','112133','112331','132131','113123','113321','133121','313121','211331','231131','213113','213311','213131','311123','311321','331121','312113','312311','332111','314111','221411','431111','111224','111422','121124','121421','141122','141221','112214','112412','122114','122411','142112','142211','241211','221114','413111','241112','134111','111242','121142','121241','114212','124112','124211','411212','421112','421211','212141','214121','412121','111143','111341','131141','114113','114311','411113','411311','113141','114131','311141','411131','211412','211214','211232','2331112'];
+function c128mods(vals){var m=[];vals.forEach(function(v){var p=C128[v],bar=1;for(var i=0;i<p.length;i++){for(var k=0;k<+p[i];k++)m.push(bar);bar^=1}});return m}
+function c128vals(s){var n=s.length,out=[],i=0,mode='';
+ function dr(i){var r=0;while(i+r<n&&s.charCodeAt(i+r)>=48&&s.charCodeAt(i+r)<=57)r++;return r}
+ while(i<n){var r=dr(i),useC=r>=2&&((i===0&&r>=4)||(i+r===n&&r>=4)||r>=6||(mode==='C'&&r>=2));
+  if(useC){
+   if(mode===''){if(r%2===0)out.push(105);else{out.push(104);out.push(s.charCodeAt(i)-32);i++;r--;out.push(99)}mode='C'}
+   else if(mode==='B'){if(r%2){out.push(s.charCodeAt(i)-32);i++;r--}out.push(99);mode='C'}
+   var pairs=r-(r%2);for(var k=0;k<pairs;k+=2)out.push(+s.substr(i+k,2));i+=pairs;
+   if(i<n){out.push(100);mode='B'}
+  }else{
+   if(mode==='')out.push(104);else if(mode==='C')out.push(100);mode='B';
+   out.push(s.charCodeAt(i)-32);i++}}
+ var sum=out[0];for(var j=1;j<out.length;j++)sum+=j*out[j];out.push(sum%103);out.push(106);return out}
+/* ---- EAN-13 ---- */
+var EL=['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
+var ER=EL.map(function(s){return s.split('').map(function(b){return b==='1'?'0':'1'}).join('')});
+var EG=ER.map(function(s){return s.split('').reverse().join('')});
+var EP=['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+function eanChk(d){var s=0;for(var i=0;i<12;i++)s+=+d[i]*(i%2?3:1);return (10-s%10)%10}
+function eanMods(d){var b='101',p=EP[+d[0]];for(var i=1;i<=6;i++)b+=(p[i-1]==='L'?EL:EG)[+d[i]];b+='01010';for(var i=7;i<=12;i++)b+=ER[+d[i]];b+='101';return b.split('').map(Number)}
+/* ---- value / series ---- */
+function addStr(d,k,len){var n=(BigInt(d)+BigInt(k));if(len===12)n=n%BigInt('1000000000000');return n.toString().padStart(d.length,'0')}
+function valueAt(k){var v=q('bc-val').value,t=q('bc-ty').value;if(!q('bc-inc').checked||k===0)return v;
+ if(t==='ean'){var d=v.replace(/\s+/g,'');if(!/^\d{12,13}$/.test(d))return v;return addStr(d.slice(0,12),k,12)}
+ var m=/(\d+)$/.exec(v);if(!m)return v;return v.slice(0,m.index)+addStr(m[1],k)}
+function build(v){var t=q('bc-ty').value;
+ if(t==='ean'){var d=v.replace(/\s+/g,'');if(!d)return{err:'Number daalo'};if(!/^\d+$/.test(d))return{err:'EAN-13 me sirf digit (0-9) chalte hain'};
+  if(d.length!==12&&d.length!==13)return{err:'EAN-13 ke liye 12 ya 13 digit chahiye (abhi '+d.length+' hain)'};
+  var c=eanChk(d),warn='';if(d.length===13&&+d[12]!==c){warn='Aakhri (check) digit galat tha, sahi kar diya: '+c;d=d.slice(0,12)+c}else if(d.length===12)d+=c;
+  return{mods:eanMods(d),text:d[0]+' '+d.slice(1,7)+' '+d.slice(7),warn:warn,shown:d}}
+ if(!v)return{err:'Number daalo'};
+ for(var i=0;i<v.length;i++){var cc=v.charCodeAt(i);if(cc<32||cc>126)return{err:'Sirf English letter / number / common symbol chalte hain'}}
+ return{mods:c128mods(c128vals(v)),text:v,warn:'',shown:v}}
+/* ---- options / geometry ---- */
+function opts(){return{W:cl(+q('bc-w').value||50,10,500),H:cl(+q('bc-h').value||25,8,500),tm:cl(+q('bc-ts').value||3.5,1.5,20),col:q('bc-col').value||'#000000',tx:q('bc-tx').checked,cut:q('bc-cut').checked}}
+function geom(o,N){var Q=10,tot=N+2*Q,pad=Math.min(1.5,o.H*.08),em=o.tx?o.tm:0,gap=o.tx?Math.min(.8,o.H*.04):0,th=.75*em,barH=o.H-2*pad-gap-th;
+ if(o.tx&&barH<o.H*.35){em=Math.max(1.5,(o.H*.65-2*pad-gap)/.75);th=.75*em;barH=o.H-2*pad-gap-th}
+ if(barH<1)barH=1;return{Q:Q,tot:tot,mod:o.W/tot,pad:pad,em:em,gap:gap,th:th,barH:barH}}
+/* ---- canvas render ---- */
+function render(u,o,ppm){var N=u.mods.length,g=geom(o,N),c=document.createElement('canvas'),Wp=Math.max(1,Math.round(o.W*ppm)),Hp=Math.max(1,Math.round(o.H*ppm));c.width=Wp;c.height=Hp;
+ var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,Wp,Hp);
+ var mp=Math.max(1,Math.floor(Wp/g.tot)),x0=Math.round((Wp-mp*N)/2),y0=Math.round(g.pad*ppm),bh=Math.round(g.barH*ppm);
+ x.fillStyle=o.col;var i=0;while(i<N){if(u.mods[i]){var j=i;while(j<N&&u.mods[j])j++;x.fillRect(x0+i*mp,y0,(j-i)*mp,bh);i=j}else i++}
+ if(o.tx){var em=g.em*ppm,ft=function(){x.font='bold '+em+'px Arial,Helvetica,sans-serif'};ft();var tw=x.measureText(u.text).width,mw=Wp*.96;if(tw>mw){em*=mw/tw;ft()}
+  x.textAlign='center';x.textBaseline='alphabetic';x.fillText(u.text,Wp/2,Math.round(y0+bh+g.gap*ppm+.75*em))}
+ if(o.cut){x.strokeStyle='#8a94a6';x.lineWidth=Math.max(1,.15*ppm);var h=x.lineWidth/2;x.strokeRect(h,h,Wp-2*h,Hp-2*h)}
+ return c}
+/* ---- layout (same logic as the sticker sheet) ---- */
+function layout(o){var pp=PAPER[q('bc-pp').value]||PAPER.A4,mg=Math.max(0,+q('bc-mg').value||0),gp=Math.max(0,+q('bc-gp').value||0),W=o.W,H=o.H,or=q('bc-or').value,best=null;
+ var op=or==='p'?[[pp[0],pp[1],'Portrait']]:or==='l'?[[pp[1],pp[0],'Landscape']]:[[pp[0],pp[1],'Portrait'],[pp[1],pp[0],'Landscape']];
+ op.forEach(function(a){var cols=Math.max(0,Math.floor((a[0]-2*mg+gp+1e-6)/(W+gp))),rows=Math.max(0,Math.floor((a[1]-2*mg+gp+1e-6)/(H+gp)));
+  var l={pw:a[0],ph:a[1],name:a[2],cols:cols,rows:rows,per:cols*rows,gp:gp,mg:mg};if(!best||l.per>best.per)best=l});
+ var pages=Math.max(1,Math.min(200,Math.round(+q('bc-pn').value||1))),lim=Math.max(0,Math.round(+q('bc-lm').value||0));
+ best.total=lim>0?lim:best.per*pages;best.pages=best.per>0?Math.ceil(best.total/best.per):0;return best}
+/* ---- UI refresh ---- */
+function cur(){return build(valueAt(0))}
+function showErr(cv,msg){cv.width=520;cv.height=120;var x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,520,120);x.fillStyle='#c0392b';x.font='bold 18px Arial';x.textAlign='center';x.fillText(msg,260,66)}
+function draw(){var u=cur(),o=opts(),cv=q('bc-cv'),info=q('bc-info');
+ if(u.err){showErr(cv,u.err);info.innerHTML='<b>'+u.err+'</b>';sheet();return}
+ var c=render(u,o,12);cv.width=c.width;cv.height=c.height;cv.getContext('2d').drawImage(c,0,0);
+ var g=geom(o,u.mods.length),mw=g.mod,h='Sticker '+f1(o.W)+' x '+f1(o.H)+' mm &middot; bar ki patli line (module): <b>'+f2(mw)+' mm</b> &middot; bar ki height: '+f1(g.barH)+' mm';
+ if(mw<.19)h+='<br><b style="color:#ffb3b3">Bar bahut patle hain &mdash; scanner shayad na pade. Width badhao ya number chhota karo.</b>';else if(mw<.25)h+='<br><span style="color:#ffe28c">Bar thode patle hain &mdash; achhe printer par hi scan honge. Width badhana behtar.</span>';
+ if(u.warn)h+='<br><span style="color:#ffe28c">'+u.warn+'</span>';
+ if(q('bc-inc').checked&&u.text===valueAt(1))h+='<br><span style="color:#ffe28c">Series ke liye number ke end me digit chahiye (jaise SPW-0001).</span>';
+ info.innerHTML=h;sheet()}
+function sheet(){var res=q('bc-res'),pg=q('bc-pg'),pc=pg.getContext('2d'),u=cur(),o=opts();
+ if(u.err){res.textContent='Pehle sahi number daalo.';pc.clearRect(0,0,pg.width,pg.height);return}
+ var L=layout(o);
+ if(L.per<1){res.innerHTML='Sticker ('+f1(o.W)+' x '+f1(o.H)+' mm) is page par fit nahi hota. Size chhota karo, kinara / gap kam karo ya bada paper chuno.';pc.clearRect(0,0,pg.width,pg.height);return}
+ res.innerHTML='<b>1 page par '+L.per+' sticker</b> ('+L.cols+' x '+L.rows+')<br>'+L.name+' '+f1(L.pw)+' x '+f1(L.ph)+' mm &middot; Gap: '+f1(L.gp)+' mm'+(L.gp<=0?' <b>(gap 0 hai &mdash; cutting me dikkat hogi)</b>':'')+'<br>Total: '+L.total+' sticker, '+L.pages+' page';
+ var k=300/L.pw;pg.width=300;pg.height=Math.round(L.ph*k);pc.fillStyle='#fff';pc.fillRect(0,0,pg.width,pg.height);
+ var gw=L.cols*o.W+(L.cols-1)*L.gp,gh=L.rows*o.H+(L.rows-1)*L.gp,ox=(L.pw-gw)/2,oy=(L.ph-gh)/2,n=Math.min(L.per,L.total),inc=q('bc-inc').checked,one=null;
+ for(var i=0;i<n;i++){var s=inc?build(valueAt(i)):(one||(one=u)),cv=render(s.err?u:s,o,Math.max(2,k*2));
+  var co=i%L.cols,ro=Math.floor(i/L.cols);pc.drawImage(cv,(ox+co*(o.W+L.gp))*k,(oy+ro*(o.H+L.gp))*k,o.W*k,o.H*k);
+  pc.strokeStyle='rgba(20,120,255,.55)';pc.lineWidth=1;pc.strokeRect((ox+co*(o.W+L.gp))*k+.5,(oy+ro*(o.H+L.gp))*k+.5,o.W*k-1,o.H*k-1)}}
+/* ---- downloads ---- */
+function dl(b,name){var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500)}
+function nm(u){return 'barcode-'+String(u.shown||'sticker').replace(/[^A-Za-z0-9_-]+/g,'_').slice(0,30)}
+function hexRgb(h){var m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(h)||[0,'00','00','00'];return PDFLib.rgb(parseInt(m[1],16)/255,parseInt(m[2],16)/255,parseInt(m[3],16)/255)}
+q('bc-png').onclick=function(){var u=cur();if(u.err)return toast(u.err);var o=opts();render(u,o,23.622).toBlob(function(b){dl(b,nm(u)+'.png')},'image/png');toast('Sticker PNG download ho rahi hai')};
+q('bc-pdf').onclick=async function(){var u0=cur();if(u0.err)return toast(u0.err);var o=opts(),L=layout(o);if(L.per<1)return toast('Sticker page par fit nahi hota');
+ if(L.total>3000)return toast('Ek baar me 3000 se zyada sticker nahi - Kam chahiye me kam number daalo');
+ toast('Sheet ban rahi hai...');
+ var pdf=await PDFLib.PDFDocument.create(),font=await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold),col=hexRgb(o.col),
+ gw=L.cols*o.W+(L.cols-1)*L.gp,gh=L.rows*o.H+(L.rows-1)*L.gp,ox=(L.pw-gw)/2,oy=(L.ph-gh)/2,pg,inc=q('bc-inc').checked;
+ for(var i=0;i<L.total;i++){
+  if(i%L.per===0)pg=pdf.addPage([L.pw*M,L.ph*M]);
+  var u=inc?build(valueAt(i)):u0;if(u.err)u=u0;var N=u.mods.length,g=geom(o,N),ix=i%L.per,co=ix%L.cols,ro=Math.floor(ix/L.cols),
+  sx=(ox+co*(o.W+L.gp))*M,sy=(L.ph-oy-(ro+1)*o.H-ro*L.gp)*M;
+  var k=0;while(k<N){if(u.mods[k]){var j=k;while(j<N&&u.mods[j])j++;
+    pg.drawRectangle({x:sx+(g.Q+k)*g.mod*M,y:sy+(o.H-g.pad-g.barH)*M,width:(j-k)*g.mod*M,height:g.barH*M,color:col});k=j}else k++}
+  if(o.tx){var em=g.em*M,tw=font.widthOfTextAtSize(u.text,em),mw=o.W*M*.96;if(tw>mw){em*=mw/tw;tw=mw}
+   pg.drawText(u.text,{x:sx+(o.W*M-tw)/2,y:sy+(o.H-(g.pad+g.barH+g.gap+.75*g.em))*M,size:em,font:font,color:col})}
+  if(o.cut)pg.drawRectangle({x:sx,y:sy,width:o.W*M,height:o.H*M,borderColor:PDFLib.rgb(.54,.58,.65),borderWidth:.4})}
+ dl(new Blob([await pdf.save()],{type:'application/pdf'}),nm(u0)+'-sheet.pdf');toast(L.total+' sticker, '+L.pages+' page ('+L.per+' per page)')};
+q('bc-add').onclick=function(){var u=cur();if(u.err)return toast(u.err);var p=curPage();if(!p)return toast('Pehle PDF kholo ya blank page jodo');
+ var o=opts(),c=render(u,o,20),w=o.W*MM,h=o.H*MM,mw=+p.dataset.bw*.9;if(w>mw){h*=mw/w;w=mw}
+ var y=Math.max(10,($('stage').getBoundingClientRect().top-p.getBoundingClientRect().top)/Z+60);
+ snap();addEl(p.querySelector('.layer'),'img',(+p.dataset.bw-w)/2,y,{src:c.toDataURL('image/png'),w:w,h:h});q('sk').classList.remove('on');toast('Barcode sticker page par lag gaya - move / resize kar sakte ho')};
+/* ---- tab wiring ---- */
+var panel=q('sk-bc'),tb=q('sk-t-bc');
+function show(){q('sk-old').classList.add('off');q('so').classList.add('off');panel.classList.remove('off');q('sk-t-own').classList.remove('on');q('sk-t-old').classList.remove('on');tb.classList.add('on');draw();var v=q('bc-val');try{v.focus();v.select()}catch(e){}}
+function hide(){panel.classList.add('off');tb.classList.remove('on')}
+tb.onclick=show;q('sk-t-own').addEventListener('click',hide);q('sk-t-old').addEventListener('click',hide);q('t-sticker').addEventListener('click',hide);
+['bc-val','bc-ty','bc-tx','bc-inc','bc-w','bc-h','bc-ts','bc-col','bc-cut','bc-pp','bc-or','bc-mg','bc-gp','bc-pn','bc-lm'].forEach(function(i){q(i).addEventListener('input',draw);q(i).addEventListener('change',draw)});
+window.__bcTest={build:build,c128vals:c128vals,c128mods:c128mods,eanMods:eanMods,eanChk:eanChk};
 })();
 </script>
 </body>
